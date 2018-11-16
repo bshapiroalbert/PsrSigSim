@@ -139,6 +139,7 @@ class Signal(object):
                                       self.Nf, endpoint=False)
 
         if self.Nt*self.Nf > 500000:  # Limits the array size to 2.048 GB
+            print("Array meets size limits, making hdf5 file")
             SignalPath = "signal.hdf5"
             if SignalType=='burst':  # Use a different file name for a burst
                 SignalPath = "burst_signal.hdf5"

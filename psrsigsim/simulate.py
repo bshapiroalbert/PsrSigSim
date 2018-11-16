@@ -252,8 +252,8 @@ class Simulation(object):
         
         
         # Now close the hdf5 file so that we can use it later
-        self.signal.SignalFile.flush()
-        self.signal.SignalFile.close()
+        #self.signal.SignalFile.flush()
+        #self.signal.SignalFile.close()
               
         
     
