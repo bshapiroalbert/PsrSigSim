@@ -249,6 +249,11 @@ class Simulation(object):
         if hasattr(self,'telescope'): # if sim_telescope is not true it skips
             if self.sim_dict['radiometer_noise']: 
                 self.obs_signal = self.telescope.radiometer_noise(self.signal,[self.signal.Nf, self.signal.Nt],self.signal.TimeBinSize)
+        
+        
+        # Now close the hdf5 file so that we can use it later
+        self.signal.SignalFile.flush()
+        self.signal.SignalFile.close()
               
         
     

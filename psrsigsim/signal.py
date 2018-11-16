@@ -61,6 +61,7 @@ class Signal(object):
         self.SignalDict = {}
         self.ObsTime = ObsTime   # Total time in milliseconds
         self.subintlen = subintlen # time in seconds
+        self.SignalFile = None
         # BRENT HACK: Change number of timebins for fold mode pulses
         if subintlen:
             # Edit sampling rate if subints, assume 2048 bins per subint for now
@@ -141,8 +142,13 @@ class Signal(object):
             SignalPath = "signal.hdf5"
             if SignalType=='burst':  # Use a different file name for a burst
                 SignalPath = "burst_signal.hdf5"
-            SignalFile = h5py.File(SignalPath, 'a')
-            self.signal = SignalFile.create_dataset(None, (rows, self.Nt),
+            #SignalFile = h5py.File(SignalPath, 'a')
+            #self.signal = SignalFile.create_dataset(None, (rows, self.Nt),
+            #                                        dtype=self.data_type)
+            # BRENT HACK: Added signal file to the signal object so we can actually
+            # save and close the hdf5 correctly to save it for other use
+            self.SignalFile = h5py.File(SignalPath, 'a')
+            self.signal = self.SignalFile.create_dataset(None, (rows, self.Nt),
                                                     dtype=self.data_type)
             #self.signal = np.memmap(SignalPath, dtype = self.data_type,
             #mode = 'w+', shape = (self.Nf, self.Nt))
