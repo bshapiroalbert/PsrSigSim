@@ -149,7 +149,7 @@ class Signal(object):
         # BRENT HACK: Added signal file to the signal object so we can actually
         # save and close the hdf5 correctly to save it for other use
         self.SignalPath = SignalPath
-        self.SignalFile = h5py.File(SignalPath, 'a')
+        self.SignalFile = h5py.File(self.SignalPath, 'a')
         self.signal = self.SignalFile.create_dataset(None, (rows, self.Nt),
                                                 dtype=self.data_type)
             #self.signal = np.memmap(SignalPath, dtype = self.data_type,
