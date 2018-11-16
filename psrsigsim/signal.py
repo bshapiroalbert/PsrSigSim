@@ -61,7 +61,7 @@ class Signal(object):
         self.SignalDict = {}
         self.ObsTime = ObsTime   # Total time in milliseconds
         self.subintlen = subintlen # time in seconds
-        self.SignalFile = None
+        #self.SignalFile = None
         # BRENT HACK: Change number of timebins for fold mode pulses
         if subintlen:
             # Edit sampling rate if subints, assume 2048 bins per subint for now
@@ -147,6 +147,7 @@ class Signal(object):
             #                                        dtype=self.data_type)
             # BRENT HACK: Added signal file to the signal object so we can actually
             # save and close the hdf5 correctly to save it for other use
+            self.SignalPath = SignalPath
             self.SignalFile = h5py.File(SignalPath, 'a')
             self.signal = self.SignalFile.create_dataset(None, (rows, self.Nt),
                                                     dtype=self.data_type)
