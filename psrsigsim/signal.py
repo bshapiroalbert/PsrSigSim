@@ -138,24 +138,25 @@ class Signal(object):
                                       self.last_freq + self.freqBinSize/2,
                                       self.Nf, endpoint=False)
 
-        if self.Nt*self.Nf > 500000:  # Limits the array size to 2.048 GB
-            print("Array meets size limits, making hdf5 file")
-            SignalPath = "signal.hdf5"
-            if SignalType=='burst':  # Use a different file name for a burst
-                SignalPath = "burst_signal.hdf5"
-            #SignalFile = h5py.File(SignalPath, 'a')
-            #self.signal = SignalFile.create_dataset(None, (rows, self.Nt),
-            #                                        dtype=self.data_type)
-            # BRENT HACK: Added signal file to the signal object so we can actually
-            # save and close the hdf5 correctly to save it for other use
-            self.SignalPath = SignalPath
-            self.SignalFile = h5py.File(SignalPath, 'a')
-            self.signal = self.SignalFile.create_dataset(None, (rows, self.Nt),
-                                                    dtype=self.data_type)
+        #if self.Nt*self.Nf > 500000:  # Limits the array size to 2.048 GB
+        print("Array meets size limits, making hdf5 file")
+        SignalPath = "signal.hdf5"
+        if SignalType=='burst':  # Use a different file name for a burst
+            SignalPath = "burst_signal.hdf5"
+        #SignalFile = h5py.File(SignalPath, 'a')
+        #self.signal = SignalFile.create_dataset(None, (rows, self.Nt),
+        #                                        dtype=self.data_type)
+        # BRENT HACK: Added signal file to the signal object so we can actually
+        # save and close the hdf5 correctly to save it for other use
+        self.SignalPath = SignalPath
+        self.SignalFile = h5py.File(SignalPath, 'a')
+        self.signal = self.SignalFile.create_dataset(None, (rows, self.Nt),
+                                                dtype=self.data_type)
             #self.signal = np.memmap(SignalPath, dtype = self.data_type,
             #mode = 'w+', shape = (self.Nf, self.Nt))
-        else:
-            self.signal = np.zeros((rows, self.Nt), dtype=self.data_type)
+        #else:
+        #    print("Initializing numpy array?")
+        #    self.signal = np.zeros((rows, self.Nt), dtype=self.data_type)
 
         self.SignalDict['mode'] = mode
         self.MetaData.AddInfo(self.SignalDict)
