@@ -150,7 +150,7 @@ class Signal(object):
         # save and close the hdf5 correctly to save it for other use
         self.SignalPath = SignalPath
         self.SignalFile = h5py.File(self.SignalPath, 'a')
-        self.signal = self.SignalFile.create_dataset(None, (rows, self.Nt),
+        self.signal = self.SignalFile.create_dataset("subint_signal", (rows, self.Nt),
                                                 dtype=self.data_type)
             #self.signal = np.memmap(SignalPath, dtype = self.data_type,
             #mode = 'w+', shape = (self.Nf, self.Nt))
