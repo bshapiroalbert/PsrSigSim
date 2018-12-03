@@ -294,6 +294,7 @@ class Pulsar(object):
         # Should work regardless of how long the observation time is I think...
         if subintlen:
             pulses_per_subint = int(subintlen // (self.T/1000.0))
+            self.signal._Nfold = pulses_per_subint
             N_periods_to_make = int( (self.ObsTime/1000.0) //subintlen) # Obstime starts in ms
             delta_bins = N_periods_to_make * self.nBinsPeriod
             self.NLastPeriodBins = int(delta_bins % self.nBinsPeriod)

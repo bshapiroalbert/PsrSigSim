@@ -208,7 +208,11 @@ class Telescope(object):
             noise = norm * np.random.normal(0, 1, shape)
         else:
             norm = sigS * signal.MetaData.gamma_draw_norm/signal.MetaData.Smax
-            noise = norm * np.random.chisquare(1, shape)
+            if signal.subintlen:
+                df = signal.Nfold
+                noise = norm * np.random.chisquare(df, shape)
+            else:
+                noise = norm * np.random.chisquare(1, shape)
 
         return noise
 
