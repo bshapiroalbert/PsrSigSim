@@ -209,7 +209,7 @@ class Telescope(object):
         else:
             norm = sigS * signal.MetaData.gamma_draw_norm/signal.MetaData.Smax
             if signal.subintlen:
-                df = signal.Nfold
+                df = int(signal.MetaData.subintlen / (signal.MetaData.pulsar_period/1000.))
                 noise = norm * np.random.chisquare(df, shape)
             else:
                 noise = norm * np.random.chisquare(1, shape)
