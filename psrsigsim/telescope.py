@@ -162,8 +162,10 @@ class Telescope(object):
             raise ValueError("Signal sampling freq < Telescope sampling freq")
         
         # BRENT HACK: if subintlength exists then we want to call it for dt here
+        # dt should be binsize of subint I think...
         if signal.subintlen:
-            dt_tel = signal.subintlen *1000.0 # convert from seconds to ms
+            nbins_per_subint = int(signal.subintlen / (signal.TimeBinSize/1000.))
+            dt_tel = (signal.subintlen/nbins_per_subint) *1000.0 # convert from seconds to ms
             print("Using subintlength for dt in ms", dt_tel)
 
         if noise:
