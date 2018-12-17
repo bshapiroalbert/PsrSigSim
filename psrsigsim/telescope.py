@@ -163,9 +163,11 @@ class Telescope(object):
         
         # BRENT HACK: if subintlength exists then we want to call it for dt here
         # dt should be binsize of subint I think...
+        # NOT SURE WHAT THE CORRECT dt SHOULD BE
         if signal.subintlen:
             nbins_per_subint = int(signal.subintlen / (signal.TimeBinSize/1000.))
-            dt_tel = (signal.subintlen/nbins_per_subint) *1000.0 # convert from seconds to ms
+            #dt_tel = (signal.subintlen/nbins_per_subint) *1000.0 # convert from seconds to ms
+            dt_tel = (1.0/signal.f_samp)*1000.
             print("Using subintlength for dt in ms", dt_tel)
 
         if noise:
