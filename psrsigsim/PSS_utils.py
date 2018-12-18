@@ -385,10 +385,10 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         # assumes we are running on Brent's local machine
         print("Assigning template")
         template = str("/home/brent/Desktop/Signal_Simulator_Project/guppi_57162_J1918-0642_0026_0001.fits")
-    print("Here's what Jeff wanted:")
-    print(template)
-    print(type(template))
-    print(isinstance(template, str))
+    #print("Here's what Jeff wanted:")
+    #print(template)
+    #print(type(template))
+    #print(isinstance(template, str))
     # We need to reshape the array(?) a la Jeff's code
     stop = nbin*nsubint
     signal = signal[:,:stop].astype('>i2')
@@ -425,6 +425,10 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     # assign copied values into draft
     for col in cols:
         psrfits1.HDU_drafts['SUBINT'][col][:] = copy_cols[col][:]
+    
+    # Check to see that they've been copied
+    print(psrfits1.HDU_drafts['SUBINT']['RA_SUB'])
+    
     #Reassign the template values for shorter name
     templ_subint = psrfits1.fits_template[4]
     #Assign new tsubint array and make new offset values. 
@@ -445,6 +449,14 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         psrfits1.HDU_drafts['SUBINT'][ii]['DAT_WTS'] = templ_subint[ii]['DAT_WTS']
     # Check dtype
     print(psrfits1.HDU_drafts['SUBINT'][0]['DAT_OFFS'].dtype)
+    #A different list of the floating points
+    one_off_floats = ['TSUBINT','OFFS_SUB','LST_SUB','RA_SUB',\
+                  'DEC_SUB','GLON_SUB','GLAT_SUB','FD_ANG',\
+                  'POS_ANG','PAR_ANG','TEL_AZ','TEL_ZEN']
+    #Just printing to have a look at the new values
+    for param in one_off_floats:
+        print(param)
+        print(psrfits1.HDU_drafts['SUBINT'][param])
     # Check the new number of rows
     print(psrfits1.draft_hdrs['SUBINT']['NAXIS2'])
     # Since PSRFITS can't be edited, need to make drafts and then write them all at the same time
