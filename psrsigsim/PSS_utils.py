@@ -371,7 +371,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     nf = 512, tsubint = 10.0):
     print("Attempting to save signal as psrfits")
     # Figure out what the signal file is;
-    if ".hdf5" in signal:
+    if isinstance(signal, str) and ".hdf5" in signal:
         # read the hdf5 file
         signal_data = h5py.File(signal,mode='r')
         signal = signal_data['subint_signal'][:]
