@@ -251,7 +251,17 @@ class Simulation(object):
         
         if hasattr(self,'telescope'): # if sim_telescope is not true it skips
             if self.sim_dict['radiometer_noise']: 
-                self.obs_signal = self.telescope.radiometer_noise(self.signal,[self.signal.Nf, self.signal.Nt],self.signal.TimeBinSize)
+                if self.signal.subintlen:
+                    nbins_per_subint = int(self.signal.subintlen / (self.signal.TimeBinSize/1000.))
+                    dt_tel = (self.signal.subintlen/nbins_per_subint) *1000.0
+                else:
+                    dt_tel = self.signal.TimeBinSize
+                print(dt_tel)
+                # Top version is just the noise with no signal in it...
+                #self.obs_signal = self.telescope.radiometer_noise(self.signal,[self.signal.Nf, self.signal.Nt], dt_tel)
+                # Now we add the signal to the radiometer noise, so it's actually the observed signal
+                self.obs_signal = self.signal.signal
+                self.obs_signal += self.telescope.radiometer_noise(self.signal,[self.signal.Nf, self.signal.Nt], dt_tel)
                 
             # BRENT HACK:
             # Now we want to save this output signal as an hdf5 signal file so that
