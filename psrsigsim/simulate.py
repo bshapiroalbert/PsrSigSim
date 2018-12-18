@@ -12,6 +12,7 @@ from pint import utils
 import os.path
 import h5py
 from psrsigsim import PSS_utils
+import numpy as np
 
 d_path = os.path.dirname(__file__)
 
