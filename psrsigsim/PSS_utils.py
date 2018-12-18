@@ -368,7 +368,7 @@ import pdat
 import astropy.io.fits as F
 # now define the big function
 def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
-    nf = 512, tsubint = 10.0):
+    nf = 512, tsubint = 10.0, check = False):
     print("Attempting to save signal as psrfits")
     # Figure out what the signal file is;
     if isinstance(signal, str) and ".hdf5" in signal:
@@ -467,7 +467,6 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     # Close the file so it doesn't take up memory or get confused with another file. 
     psrfits1.close()
     # Now we can add a check to make sure that it worked
-    check = True
     if check:
         FITS = F.open(new_psrfits)
         print(FITS.info())
