@@ -449,6 +449,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         psrfits1.HDU_drafts['SUBINT'][ii]['DAT_WTS'] = templ_subint[ii]['DAT_WTS']
     # Check dtype
     print(psrfits1.HDU_drafts['SUBINT'][0]['DAT_OFFS'].dtype)
+    """
     #A different list of the floating points
     one_off_floats = ['TSUBINT','OFFS_SUB','LST_SUB','RA_SUB',\
                   'DEC_SUB','GLON_SUB','GLAT_SUB','FD_ANG',\
@@ -457,6 +458,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     for param in one_off_floats:
         print(param)
         print(psrfits1.HDU_drafts['SUBINT'][param])
+    """
     # Check the new number of rows
     print(psrfits1.draft_hdrs['SUBINT']['NAXIS2'])
     # Since PSRFITS can't be edited, need to make drafts and then write them all at the same time
@@ -465,7 +467,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     # Close the file so it doesn't take up memory or get confused with another file. 
     psrfits1.close()
     # Now we can add a check to make sure that it worked
-    check = False
+    check = True
     if check:
         FITS = F.open(new_psrfits)
         print(FITS.info())
