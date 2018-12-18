@@ -384,7 +384,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         #template = "/hyrule/data/users/bjs0024/SigSim_Project1/Example_J1918/guppi_57162_J1918-0642_0026_0001.fits"
         # assumes we are running on Brent's local machine
         print("Assigning template")
-        template = "/home/brent/Desktop/Signal_Simulator_Project/guppi_57162_J1918-0642_0026_0001.fits"
+        template = str("/home/brent/Desktop/Signal_Simulator_Project/guppi_57162_J1918-0642_0026_0001.fits")
     print("Here's what Jeff wanted:")
     print(template)
     print(type(template))
