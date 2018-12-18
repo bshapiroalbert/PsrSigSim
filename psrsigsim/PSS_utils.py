@@ -346,3 +346,111 @@ def get_pint_models(psr_name, psr_file_path):
         par_model = models.get_model(model_name) 
 
         return par_model
+
+"""
+BIG BRENT HACK:
+---------------------------------------------------------------------------
+We will define a new function here that, when called, will write out a psrfits
+file from some template. For now this will be a very specific template with
+very specific parameters, but hopefully this can be generalized.
+
+The input required will be:
+signal: either the signal array in simulate or the hdf5 signal file, not sure yet
+template: the template psrfits file that will be loaded. Currently this will 
+        default to one in particular
+the parameters of the array will be adjustable, but will have some default values
+NOTE: We will assume 10 second subints after how our template file is set up,
+    but this can be changed
+"""
+# import some new packages
+import h5py
+import pdat
+import astropy.io.fits as F
+# now define the big function
+def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
+    nf = 512, tsubint = 10.0):
+    print("Attempting to save signal as psrfits")
+    # Figure out what the signal file is;
+    if ".hdf5" in signal:
+        # read the hdf5 file
+        signal_data = h5py.File(signal,mode='r')
+        signal = signal_data['subint_signal'][:]
+    # Otherwise we will assume that this a signal object and is just an array
+    else:
+        print("Signal is the inpute array")
+    # Get the template psrfits file
+    if template == None:
+        # assumes we are running on bowser
+        #template = "/hyrule/data/users/bjs0024/SigSim_Project1/Example_J1918/guppi_57162_J1918-0642_0026_0001.fits"
+        # assumes we are running on Brent's local machine
+        template = "/home/brent/Desktop/Signal_Simulator_Project/guppi_57162_J1918-0642_0026_0001.fits"
+    # We need to reshape the array(?) a la Jeff's code
+    stop = nbin*nsubint
+    signal = signal[:,:stop].astype('>i2')
+    # out arrays
+    Out = np.zeros((nsubint,npols,nf,nbin))
+    # This loop does a thing that's important
+    for ii in range(nsubint):
+        idx0 = 0 + ii*2048
+        idxF = idx0 + 2048
+        Out[ii,0,:,:] = signal[:,idx0:idxF]
+    # define the new psrfits file name
+    new_psrfits = "full_signal.fits"
+    # define the file(?)
+    psrfits1=pdat.psrfits(new_psrfits,from_template=template,obs_mode='PSR')
+    # Check `dtype`
+    print(psrfits1.fits_template[4]['DATA'][:].dtype)
+    # use template file dimensions with minor changes
+    psrfits1.set_subint_dims(nbin=nbin, nsblk=1, nchan=nf, \
+        nsubint=nsubint, npol=npols, \
+        obs_mode='PSR', data_dtype='>i2')
+    # copy over the values that are not the simulated subint data array from template
+    for ky in psrfits1.draft_hdr_keys[1:]:
+        if ky!='SUBINT':
+            psrfits1.copy_template_BinTable(ky)
+    # Make a new subint draft header
+    psrfits1.HDU_drafts['SUBINT'] = psrfits1.make_HDU_rec_array(nsubint, psrfits1.subint_dtype)
+    #Check that there is something there for all of the headers now. 
+    print([val is not None for val in psrfits1.HDU_drafts.values()])
+    # Change polarization type
+    psrfits1.set_draft_header('SUBINT',{'POL_TYPE':'AA+BB'})
+    #single_subint_floats is a list of all the BinTable parameter names that only have one value per subint (or row).
+    cols = psrfits1.single_subint_floats
+    copy_cols = psrfits1.fits_template[4].read(columns=cols)
+    # assign copied values into draft
+    for col in cols:
+        psrfits1.HDU_drafts['SUBINT'][col][:] = copy_cols[col][:]
+    #Reassign the template values for shorter name
+    templ_subint = psrfits1.fits_template[4]
+    #Assign new tsubint array and make new offset values. 
+    offs_sub_init = tsubint/2
+    offs_sub = np.zeros((nsubint))
+    psrfits1.HDU_drafts['SUBINT']['TSUBINT'] = np.ones((nsubint))*tsubint
+    #Make offset array
+    for jj in range(nsubint):
+        offs_sub[jj] = offs_sub_init + (jj * tsubint)
+    #Assign all of the arrays to the draft SUBINT
+    #The first two assignments are new, the rest are just copies (of the pertinent parts of the the old file)
+    for ii in range(nsubint):
+        psrfits1.HDU_drafts['SUBINT'][ii]['OFFS_SUB'] = offs_sub[ii]
+        psrfits1.HDU_drafts['SUBINT'][ii]['DATA'] = Out[ii,0,:,:]
+        psrfits1.HDU_drafts['SUBINT'][ii]['DAT_SCL'] = templ_subint[ii]['DAT_SCL'][:,:nf*npols]
+        psrfits1.HDU_drafts['SUBINT'][ii]['DAT_OFFS'] = templ_subint[ii]['DAT_OFFS'][:,:nf*npols]
+        psrfits1.HDU_drafts['SUBINT'][ii]['DAT_FREQ'] = templ_subint[ii]['DAT_FREQ']
+        psrfits1.HDU_drafts['SUBINT'][ii]['DAT_WTS'] = templ_subint[ii]['DAT_WTS']
+    # Check dtype
+    print(psrfits1.HDU_drafts['SUBINT'][0]['DAT_OFFS'].dtype)
+    # Check the new number of rows
+    print(psrfits1.draft_hdrs['SUBINT']['NAXIS2'])
+    # Since PSRFITS can't be edited, need to make drafts and then write them all at the same time
+    # Hopefully we can ignore any output errors as suggested
+    psrfits1.write_psrfits(hdr_from_draft=True)
+    # Close the file so it doesn't take up memory or get confused with another file. 
+    psrfits1.close()
+    # Now we can add a check to make sure that it worked
+    check = False
+    if check:
+        FITS = F.open(new_psrfits)
+        print(FITS.info())
+        subint=FITS[4]
+        print(subint.data[0][19].shape)

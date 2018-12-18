@@ -10,6 +10,8 @@ from pint.models import polycos
 from pint import models
 from pint import utils
 import os.path
+import h5py
+from psrsigsim import PSS_utils
 
 d_path = os.path.dirname(__file__)
 
@@ -249,13 +251,32 @@ class Simulation(object):
         if hasattr(self,'telescope'): # if sim_telescope is not true it skips
             if self.sim_dict['radiometer_noise']: 
                 self.obs_signal = self.telescope.radiometer_noise(self.signal,[self.signal.Nf, self.signal.Nt],self.signal.TimeBinSize)
-        
-        
-        # Now close the hdf5 file so that we can use it later
-        #self.signal.SignalFile.flush()
-        #self.signal.SignalFile.close()
+                
+            # BRENT HACK:
+            # Now we want to save this output signal as an hdf5 signal file so that
+            # includes radiometer noise
+            # May need to be changed later, this isn't the best way probably
+            try:
+                print("Attempting to save observed signal as hdf5 file...")
+                fullsignal_name = "full_signal.hdf5"
+                fullsignal_file = h5py.File(fullsignal_name, 'w')
+                fullsignal_file.create_dataset("full_subint_signal", \
+                    data=self.obs_signal, dtype='float32')
+                fullsignal_file.close()
+            except:
+                print("ERROR: Cannot save full signal file, check signal or hdf5 notation")
               
-        
+            # Now we also want to try to save this data as a psrfits file
+            try:
+                print("Attempting to save signal as a psrfits file...")
+                PSS_utils.save_psrfits(self.obs_signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
+                                       nf = 512, tsubint = 10.0)
+            except:
+                print("Damn, we couldn't save this as a psrfits file")
+            
+            # If this doesn't work then we can also try to save this as a psrfits
+            # with the hdf5 file that we just make maybe
+                
     
     
     
