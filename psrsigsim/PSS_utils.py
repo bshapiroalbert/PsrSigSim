@@ -377,13 +377,16 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         signal = signal_data['subint_signal'][:]
     # Otherwise we will assume that this a signal object and is just an array
     else:
-        print("Signal is the inpute array")
+        print("Signal is the input array")
     # Get the template psrfits file
     if template == None:
         # assumes we are running on bowser
         #template = "/hyrule/data/users/bjs0024/SigSim_Project1/Example_J1918/guppi_57162_J1918-0642_0026_0001.fits"
         # assumes we are running on Brent's local machine
         template = "/home/brent/Desktop/Signal_Simulator_Project/guppi_57162_J1918-0642_0026_0001.fits"
+    print("Here's what Jeff wanted:")
+    print(type(template))
+    print(isinstance(template, str))
     # We need to reshape the array(?) a la Jeff's code
     stop = nbin*nsubint
     signal = signal[:,:stop].astype('>i2')
