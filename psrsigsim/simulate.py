@@ -267,12 +267,13 @@ class Simulation(object):
                 print("ERROR: Cannot save full signal file, check signal or hdf5 notation")
               
             # Now we also want to try to save this data as a psrfits file
-            try:
-                print("Attempting to save signal as a psrfits file...")
-                PSS_utils.save_psrfits(self.obs_signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
-                                       nf = 512, tsubint = 10.0)
-            except:
-                print("Damn, we couldn't save this as a psrfits file")
+            #try:
+            print("Attempting to save signal as a psrfits file...")
+            print(np.shape(self.obs_signal))
+            PSS_utils.save_psrfits(self.obs_signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
+                                   nf = 512, tsubint = 10.0)
+            #except:
+            #    print("Damn, we couldn't save this as a psrfits file")
             
             # If this doesn't work then we can also try to save this as a psrfits
             # with the hdf5 file that we just make maybe
