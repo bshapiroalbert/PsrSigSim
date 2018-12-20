@@ -368,7 +368,7 @@ import pdat
 import astropy.io.fits as F
 # now define the big function
 def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
-    nf = 512, tsubint = 10.0, check = False):
+    nf = 512, tsubint = 10.0, check = False, DM = None):
     print("Attempting to save signal as psrfits")
     # Figure out what the signal file is;
     if isinstance(signal, str) and ".hdf5" in signal:
@@ -419,6 +419,9 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     print([val is not None for val in psrfits1.HDU_drafts.values()])
     # Change polarization type
     psrfits1.set_draft_header('SUBINT',{'POL_TYPE':'AA+BB'})
+    # Change the DM value if necessary
+    if DM != None:
+        psrfits1.set_draft_header('SUBINT',{'DM': DM})
     #single_subint_floats is a list of all the BinTable parameter names that only have one value per subint (or row).
     cols = psrfits1.single_subint_floats
     copy_cols = psrfits1.fits_template[4].read(columns=cols)
