@@ -101,7 +101,8 @@ class ISM(object):
                     raise ValueError('Dispersion broadening not currently supported in explore mode.')
                 #dummy_array[:] = self.signal[ii,:]
                 # BRENT HACK: changed the dt to be the dm_timebin variable defined above
-                self.signal[ii,:] = utils.shift_t(self.signal[ii,:], self.time_delays[ii], use_pyfftw=use_pyfftw, dt=dm_timebin)
+                #self.signal[ii,:] = utils.shift_t(self.signal[ii,:], self.time_delays[ii], use_pyfftw=use_pyfftw, dt=dm_timebin)
+                self.signal[ii,:] = utils.shift_t(np.double(self.signal[ii,:]), np.double(self.time_delays[ii]), use_pyfftw=use_pyfftw, dt=np.double(dm_timebin))
                 if (ii+1) % int(self.Nf//20) ==0:
                     shift_check = time.time()
                     try: #Python 2 workaround. Python 2 __future__ does not have 'flush' kwarg.
