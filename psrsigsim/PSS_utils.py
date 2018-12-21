@@ -368,7 +368,7 @@ import pdat
 import astropy.io.fits as F
 # now define the big function
 def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
-    nf = 512, tsubint = 10.0, check = False, DM = None):
+    nf = 512, tsubint = 10.0, check = False, DM = None, freqbins = None):
     print("Attempting to save signal as psrfits")
     # Figure out what the signal file is;
     if isinstance(signal, str) and ".hdf5" in signal:
@@ -448,7 +448,10 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         psrfits1.HDU_drafts['SUBINT'][ii]['DATA'] = Out[ii,0,:,:]
         psrfits1.HDU_drafts['SUBINT'][ii]['DAT_SCL'] = templ_subint[ii]['DAT_SCL'][:,:nf*npols]
         psrfits1.HDU_drafts['SUBINT'][ii]['DAT_OFFS'] = templ_subint[ii]['DAT_OFFS'][:,:nf*npols]
-        psrfits1.HDU_drafts['SUBINT'][ii]['DAT_FREQ'] = templ_subint[ii]['DAT_FREQ']
+        if freqbins == None:
+            psrfits1.HDU_drafts['SUBINT'][ii]['DAT_FREQ'] = templ_subint[ii]['DAT_FREQ']
+        else:   
+            psrfits1.HDU_drafts['SUBINT'][ii]['DAT_FREQ'] = freqbins
         psrfits1.HDU_drafts['SUBINT'][ii]['DAT_WTS'] = templ_subint[ii]['DAT_WTS']
     # Check dtype
     print(psrfits1.HDU_drafts['SUBINT'][0]['DAT_OFFS'].dtype)

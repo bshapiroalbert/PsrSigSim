@@ -286,7 +286,7 @@ class Simulation(object):
             print(np.shape(self.obs_signal))
             PSS_utils.save_psrfits(self.obs_signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
                                    nf = 512, tsubint = self.pulsar.subintlen,\
-                                   check = True, DM = self.ISM.DM)
+                                   check = True, DM = self.ISM.DM, freqbins = self.signal.freq_Array)
             #except:
             #    print("Damn, we couldn't save this as a psrfits file")
             
