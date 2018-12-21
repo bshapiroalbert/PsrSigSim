@@ -262,6 +262,9 @@ class Simulation(object):
                 # Now we add the signal to the radiometer noise, so it's actually the observed signal
                 self.obs_signal = self.signal.signal
                 self.obs_signal += self.telescope.radiometer_noise(self.signal,[self.signal.Nf, self.signal.Nt], dt_tel)
+                # We will also save just the noise part as a callable
+                self.telescope_noise = self.telescope.radiometer_noise(self.signal,[self.signal.Nf, self.signal.Nt], dt_tel)
+                
                 
             # BRENT HACK:
             # Now we want to save this output signal as an hdf5 signal file so that
