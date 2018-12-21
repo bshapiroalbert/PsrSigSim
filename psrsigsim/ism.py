@@ -69,8 +69,8 @@ class ISM(object):
             self.K = 1.0/2.41e-4 #constant used to be more consistent with PSRCHIVE
             #self.time_delays = -1e-3*self.K*self.DM*(np.power((self.freq_Array/1e3),-2)) #freq in MHz, delays in milliseconds
             # BRENT HACK:
-            # Testing out changing the DM delay to be refrenced from center freq
-            self.time_delays = -1e-3*self.K*self.DM*((np.power(np.max((self.freq_Array)/1e3),-2))-\
+            # Testing out changing the DM delay to be refrenced from min freq
+            self.time_delays = -1e-3*self.K*self.DM*((np.power(np.min((self.freq_Array)/1e3),-2))-\
                 np.power((self.freq_Array/1e3),-2))
             #Dispersion as compared to infinite frequency
             if self.MD.mode == 'explore':
