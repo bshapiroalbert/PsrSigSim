@@ -134,9 +134,13 @@ class Signal(object):
         elif self.first_freq < 0.0:
             raise ValueError("First Frequency Less Than Zero")
         self.last_freq = self.f0 + self.freqBinSize * self.Nf/2
-        self.freq_Array = np.linspace(self.first_freq + self.freqBinSize/2,
-                                      self.last_freq + self.freqBinSize/2,
-                                      self.Nf, endpoint=False)
+        #self.freq_Array = np.linspace(self.first_freq + self.freqBinSize/2,
+        #                              self.last_freq + self.freqBinSize/2,
+        #                              self.Nf, endpoint=False)
+        # BRENT HACK: set frequency bins to be top of subbands
+        self.freq_Array = np.linspace(self.first_freq + self.freqBinSize,\
+            self.last_freq + self.freqBinSize,\
+            self.Nf, endpoint = False)
 
         #if self.Nt*self.Nf > 500000:  # Limits the array size to 2.048 GB
         print("Array meets size limits, making hdf5 file")
