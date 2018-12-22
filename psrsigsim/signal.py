@@ -137,10 +137,9 @@ class Signal(object):
         #self.freq_Array = np.linspace(self.first_freq + self.freqBinSize/2,
         #                              self.last_freq + self.freqBinSize/2,
         #                              self.Nf, endpoint=False)
-        # BRENT HACK: set frequency bins to be top of subbands
-        self.freq_Array = np.linspace(self.first_freq + self.freqBinSize,\
-            self.last_freq + self.freqBinSize,\
-            self.Nf, endpoint = False)
+        # BRENT HACK: set frequency bins to be bottom of subbands
+        self.freq_Array = np.arange(self.first_freq,\
+            self.last_freq, self.freqBinSize)
 
         #if self.Nt*self.Nf > 500000:  # Limits the array size to 2.048 GB
         print("Array meets size limits, making hdf5 file")
