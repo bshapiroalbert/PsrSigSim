@@ -205,7 +205,9 @@ class Telescope(object):
         G = self.area / (Np*_kB)  # K/Jy (gain)
 
         # noise variance
+        print(BW)
         sigS = self.Tsys / G / np.sqrt(Np * dt * BW)  # mJy
+        print(sigS)
 
         if signal.SignalType == 'voltage':
             norm = np.sqrt(sigS) \
