@@ -370,6 +370,12 @@ import astropy.io.fits as F
 def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     nf = 512, tsubint = 10.0, check = False, DM = None, freqbins = None):
     print("Attempting to save signal as psrfits")
+    # NEW HACK: Must save 64 subints for now so just add zeros to the data if not correct nsubint
+    if nsubint != 64:
+        extra_nsub = 64-nsubint
+        extra_zeros = np.zeros((nf, extra_nsub*nbin))
+        signal = np.concatenate((signal, extra_zeros), axis = 1)
+        nsubint = 64
     # Figure out what the signal file is;
     if isinstance(signal, str) and ".hdf5" in signal:
         # read the hdf5 file
