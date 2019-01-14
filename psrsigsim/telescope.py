@@ -169,9 +169,10 @@ class Telescope(object):
             dt_tel = (signal.subintlen/nbins_per_subint) *1000.0 # convert from seconds to ms
             #dt_tel = (1.0/signal.f_samp)*1000.
             print("Using subintlength for dt in ms", dt_tel)
+            bw_per_chan = float(signal.bw)/float(signal.Nf)
 
         if noise:
-            out += self.radiometer_noise(signal, out.shape, dt_tel)
+            out += self.radiometer_noise(signal, out.shape, dt_tel, BW = bw_per_chan)
 
         if signal.SignalType == 'voltage':
             clip = signal.MetaData.gauss_draw_max
@@ -186,18 +187,20 @@ class Telescope(object):
 
         return out
 
-    def radiometer_noise(self, signal, shape, dt):
+    def radiometer_noise(self, signal, shape, dt, BW = None):
         """compute radiometer white noise
         signal -- signal object (needed for BW & Npol... should use telescope properties)
         shape -- shape of output noise array (could probably be determined from telescope properties)
         dt -- telescope sample rate in msec
 
         flux density fluctuations: sigS from Lorimer & Kramer eq 7.12
+        NOTE: If subintegrated, need bandwidth per channel, not full bandwidth
         """ # noqa E501
         #TODO replace A with Aeff, depends on pointing for some telescopes
         #TODO Tsys -> Trec, compute Tsky, Tspill, Tatm from pointing
         dt *= 1.0e-3  # convert to sec
-        BW = signal.bw  # MHz
+        if BW == None:
+            BW = signal.bw  # MHz
         Np = signal.Npols
         G = self.area / (Np*_kB)  # K/Jy (gain)
 
