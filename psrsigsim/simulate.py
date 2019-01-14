@@ -284,8 +284,11 @@ class Simulation(object):
             #try:
             print("Attempting to save signal as a psrfits file...")
             print(np.shape(self.obs_signal))
-            PSS_utils.save_psrfits(self.obs_signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
-                                   nf = 512, tsubint = self.pulsar.subintlen,\
+            nsubint = int(self.pulsar.ObsTime/1000./self.pulsar.subintlen)
+            PSS_utils.save_psrfits(self.obs_signal, template=None, \
+                                   nbin = self.pulsar.nBinsPeriod, nsubint = nsubint, \
+                                   npols = self.pulsar.Npols, \
+                                   nf = self.pulsar.Nf, tsubint = self.pulsar.subintlen,\
                                    check = True, DM = self.ISM.DM, freqbins = self.signal.freq_Array)
             #except:
             #    print("Damn, we couldn't save this as a psrfits file")
