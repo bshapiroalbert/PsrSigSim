@@ -199,7 +199,7 @@ class Telescope(object):
         #TODO Tsys -> Trec, compute Tsky, Tspill, Tatm from pointing
         dt *= 1.0e-3  # convert to sec
         if signal.subintlen:
-            bw_per_chan = float(signal.bw)/float(signal.Nf) # MHz (bandwidth per channel)
+            BW = float(signal.bw)/float(signal.Nf) # MHz (bandwidth per channel)
         else:
             BW = signal.bw  # MHz
         Np = signal.Npols
