@@ -252,8 +252,10 @@ class Simulation(object):
         if hasattr(self,'telescope'): # if sim_telescope is not true it skips
             if self.sim_dict['radiometer_noise']: 
                 if self.signal.subintlen:
-                    nbins_per_subint = int(self.signal.subintlen / (self.signal.TimeBinSize/1000.))
-                    dt_tel = (self.signal.subintlen/nbins_per_subint) *1000.0
+                    nbins_per_subint = int(signal.subintlen / (signal.TimeBinSize/1000.))
+                    #dt_tel = (signal.subintlen/nbins_per_subint) *1000.0 # convert from seconds to ms
+                    dt_tel = signal.MetaData.pulsar_period/nbins_per_subint # ms
+                    print("Using subintlength for dt in ms", dt_tel)
                 else:
                     dt_tel = self.signal.TimeBinSize
                 print(dt_tel)
