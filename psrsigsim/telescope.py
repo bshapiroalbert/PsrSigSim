@@ -162,12 +162,11 @@ class Telescope(object):
             raise ValueError("Signal sampling freq < Telescope sampling freq")
         
         # BRENT HACK: if subintlength exists then we want to call it for dt here
-        # dt should be binsize of subint I think...
-        # NOT SURE WHAT THE CORRECT dt SHOULD BE
+        # dt is pulse period / nbins, and the rest is degrees of freedom in chisquared
         if signal.subintlen:
             nbins_per_subint = int(signal.subintlen / (signal.TimeBinSize/1000.))
-            dt_tel = (signal.subintlen/nbins_per_subint) *1000.0 # convert from seconds to ms
-            #dt_tel = (1.0/signal.f_samp)*1000.
+            #dt_tel = (signal.subintlen/nbins_per_subint) *1000.0 # convert from seconds to ms
+            dt_tel = signal.MetaData.pulsar_period/nbins_per_subint # ms
             print("Using subintlength for dt in ms", dt_tel)
 
         if noise:
@@ -225,9 +224,7 @@ class Telescope(object):
             norm = sigS * signal.MetaData.gamma_draw_norm/signal.MetaData.Smax
             if signal.subintlen:
                 df = int(signal.MetaData.subintlen / (signal.MetaData.pulsar_period/1000.))
-                #noise = norm * np.random.chisquare(df, shape)
-                # if dt from subints, already taken care of folding
-                noise = norm * np.random.chisquare(1, shape)
+                noise = norm * np.random.chisquare(df, shape)
             else:
                 noise = norm * np.random.chisquare(1, shape)
 
