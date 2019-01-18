@@ -198,17 +198,24 @@ class Telescope(object):
         #TODO replace A with Aeff, depends on pointing for some telescopes
         #TODO Tsys -> Trec, compute Tsky, Tspill, Tatm from pointing
         dt *= 1.0e-3  # convert to sec
+        """
+        BRENT HACK: We want to make sure we have Np = 2 for full NANOGrav 
+        observations since Stokes I has Np = 2. Also the bandwidth should 
+        be just the width of a single frequency channel.
+        """
         if signal.subintlen:
             BW = float(signal.bw)/float(signal.Nf) # MHz (bandwidth per channel)
+            Np = 2
         else:
             BW = signal.bw  # MHz
-        Np = signal.Npols
+            Np = signal.Npols
+        
         G = self.area / (Np*_kB)  # K/Jy (gain)
 
         # noise variance
-        print(BW)
+        #print(BW)
         sigS = self.Tsys / G / np.sqrt(Np * dt * BW)  # mJy
-        print(sigS)
+        #print(sigS)
 
         if signal.SignalType == 'voltage':
             norm = np.sqrt(sigS) \
