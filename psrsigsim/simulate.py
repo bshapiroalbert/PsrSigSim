@@ -253,8 +253,9 @@ class Simulation(object):
             if self.sim_dict['radiometer_noise']: 
                 if self.signal.subintlen:
                     nbins_per_subint = int(self.signal.subintlen / (self.signal.TimeBinSize/1000.))
-                    #dt_tel = (signal.subintlen/nbins_per_subint) *1000.0 # convert from seconds to ms
-                    dt_tel = self.signal.MetaData.pulsar_period/nbins_per_subint # ms
+                    dt_tel = (signal.subintlen/nbins_per_subint) *1000.0 # convert from seconds to ms
+                    # Still some issue with this one, now it's not strong enough
+                    #dt_tel = self.signal.MetaData.pulsar_period/nbins_per_subint # ms
                     print("Using subintlength for dt in ms", dt_tel)
                 else:
                     dt_tel = self.signal.TimeBinSize

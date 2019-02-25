@@ -165,8 +165,8 @@ class Telescope(object):
         # dt is pulse period / nbins, and the rest is degrees of freedom in chisquared
         if signal.subintlen:
             nbins_per_subint = int(signal.subintlen / (signal.TimeBinSize/1000.))
-            #dt_tel = (signal.subintlen/nbins_per_subint) *1000.0 # convert from seconds to ms
-            dt_tel = signal.MetaData.pulsar_period/nbins_per_subint # ms
+            dt_tel = (signal.subintlen/nbins_per_subint) *1000.0 # convert from seconds to ms
+            #dt_tel = signal.MetaData.pulsar_period/nbins_per_subint # ms
             print("Using subintlength for dt in ms", dt_tel)
 
         if noise:
