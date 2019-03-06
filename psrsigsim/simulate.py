@@ -284,11 +284,12 @@ class Simulation(object):
                 print("ERROR: Cannot save full signal file, check signal or hdf5 notation")
               
             # Now we also want to try to save this data as a psrfits file
+            # added template file to input dictionary
             #try:
             print("Attempting to save signal as a psrfits file...")
             print(np.shape(self.obs_signal))
             nsubint = int(self.pulsar.ObsTime/1000./self.pulsar.subintlen)
-            PSS_utils.save_psrfits(self.obs_signal, template=None, \
+            PSS_utils.save_psrfits(self.obs_signal, template=self.sim_dict['tempfits'], \
                                    nbin = self.pulsar.nBinsPeriod, nsubint = nsubint, \
                                    npols = self.pulsar.Npols, \
                                    nf = self.pulsar.Nf, tsubint = self.pulsar.subintlen,\
