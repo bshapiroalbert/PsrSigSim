@@ -368,10 +368,11 @@ import pdat
 import astropy.io.fits as F
 # now define the big function
 def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
-    nf = 512, tsubint = 10.0, check = False, DM = None, freqbins = None):
+    nf = 512, tsubint = 10.0, nsubintcorr = False, check = False, DM = None, freqbins = None):
     print("Attempting to save signal as psrfits")
     # NEW HACK: Must save 64 subints for now so just add zeros to the data if not correct nsubint
-    if nsubint != 64:
+    # May not want to reassign the number of subints, so we add a flag for that...
+    if nsubint != 64 and nsubintcorr == True:
         print("Reassigning to 64 subintegrations")
         extra_nsub = 64-nsubint
         extra_zeros = np.zeros((nf, extra_nsub*nbin))
