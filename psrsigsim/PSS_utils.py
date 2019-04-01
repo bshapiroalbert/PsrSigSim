@@ -372,6 +372,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     print("Attempting to save signal as psrfits")
     # NEW HACK: Must save 64 subints for now so just add zeros to the data if not correct nsubint
     if nsubint != 64:
+        print("Reassigning to 64 subintegrations")
         extra_nsub = 64-nsubint
         extra_zeros = np.zeros((nf, extra_nsub*nbin))
         signal = np.concatenate((signal, extra_zeros), axis = 1)
