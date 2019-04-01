@@ -433,6 +433,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     copy_cols = psrfits1.fits_template[4].read(columns=cols)
     # assign copied values into draft
     for col in cols:
+        print(col, np.shape(psrfits1.HDU_drafts['SUBINT'][col][:]), np.shape(copy_cols[col][:]))
         psrfits1.HDU_drafts['SUBINT'][col][:] = copy_cols[col][:]
     
     # Check to see that they've been copied
