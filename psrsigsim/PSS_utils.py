@@ -430,11 +430,15 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     if DM != None:
         psrfits1.set_draft_header('SUBINT',{'DM': DM})
     #single_subint_floats is a list of all the BinTable parameter names that only have one value per subint (or row).
+    print("Debugging from here(ish)")
     cols = psrfits1.single_subint_floats
+    print(cols)
     copy_cols = psrfits1.fits_template[4].read(columns=cols)
+    print(copy_cols)
     # assign copied values into draft
     for col in cols:
         print(col, np.shape(psrfits1.HDU_drafts['SUBINT'][col][:]), np.shape(copy_cols[col][:]))
+        print(copy_cols[col][:])
         psrfits1.HDU_drafts['SUBINT'][col][:] = copy_cols[col][:]
     
     # Check to see that they've been copied
