@@ -361,14 +361,64 @@ template: the template psrfits file that will be loaded. Currently this will
 the parameters of the array will be adjustable, but will have some default values
 NOTE: We will assume 10 second subints after how our template file is set up,
     but this can be changed
+setMJD will allow us to change the initial starting MJD and times, etc, so that
+we can write psrfits files that are phase connected. The input for 'setMJD'
+should be list of input values for the 'nextMJD' function.
+
+NOTE: The nextMJD function is meant to work in corrdination with the save_psrfits
+to rewrite date metadata to phase connect simulated data.
 """
+# import necessary packages
+from astropy.time import Time
+from astropy.coordinates import EarthLocation
+
+def nextMJD(obslen, initMJD, initSMJD, initSOFFS, observatory = None):
+    """
+    The purpose of this function is to rewrite the initial date of observation metadata in
+    the fits file headers. It will take in the length of the observation in seconds, as well
+    as some initial MJD, SMJD (seconds from start of MJD), and initSOFFS (initial seconds 
+    offset) and then calculate what the next set of these values, as well as the dates of 
+    observation and file creation in the fits UTC format, and then return these values.
+    It will also take the name of the observatory that we are using.
+    
+    This is currently implimented only in the save_psrfits function in PSS_utils and is 
+    designed to be called only if multiple files are being created in a row so that this will
+    hopefully phase connect all files. 
+    """
+    # Detemine what the next start second offset is:
+    frac_sec = float('0.'+str(obslen).split('.')[-1])
+    # Determine what the MJD increase is
+    obslen_days = obslen / 86400.0 # days
+    # increase all relavent values
+    SOFFS = initSOFFS+frac_sec
+    # Check to make sure that this is less than 1, if not fix it
+    if SOFFS > 1.0:
+        SOFFS = float('0.'+str(SOFFS).split('.')[-1])
+        obslen += 1
+    SMJD = int(np.floor(initSMJD+obslen)) # seconds
+    MJD = initMJD+obslen_days
+    saveMJD = str(int(np.floor(MJD)))
+    # Now we get the new time of observation and time of file creation
+    if observatory == 'GBT':
+        obs_loc = EarthLocation.of_site('GBT').geodetic
+        t = Time(MJD, format = 'mjd', scale = 'utc', location = obs_loc)
+    else:
+        # no built in location for Arecibo?
+        t = Time(MJD, format = 'mjd', scale = 'utc')
+    save_t = t.fits
+    saveDATE = save_t[:-5] # value to save
+    saveDATEOBS = save_t[:-5] # value to save
+    print(SMJD, SOFFS, MJD, saveMJD, saveDATE, saveDATEOBS)
+    return SMJD, SOFFS, MJD, saveMJD, saveDATE, saveDATEOBS
+
 # import some new packages
 import h5py
 import pdat
 import astropy.io.fits as F
 # now define the big function
 def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
-    nf = 512, tsubint = 10.0, nsubintcorr = False, check = False, DM = None, freqbins = None):
+    nf = 512, tsubint = 10.0, nsubintcorr = False, check = False, DM = None, \
+    freqbins = None, setMJD = None):
     print("Attempting to save signal as psrfits")
     # NEW HACK: Must save 64 subints for now so just add zeros to the data if not correct nsubint
     # May not want to reassign the number of subints, so we add a flag for that...
@@ -407,6 +457,11 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         idx0 = 0 + ii*2048
         idxF = idx0 + 2048
         Out[ii,0,:,:] = signal[:,idx0:idxF]
+    
+    # Now we get the new MJD values if necessary
+    if setMJD:
+        SMJD, SOFFS, MJD, saveMJD, saveDATE, saveDATEOBS = \
+            nextMJD(setMJD[0], setMJD[1], setMJD[2], setMJD[3])
     # define the new psrfits file name
     new_psrfits = "full_signal.fits"
     # define the file(?)
@@ -418,9 +473,17 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         nsubint=nsubint, npol=npols, \
         obs_mode='PSR', data_dtype='>i2')
     # copy over the values that are not the simulated subint data array from template
-    for ky in psrfits1.draft_hdr_keys[1:]:
-        if ky!='SUBINT':
-            psrfits1.copy_template_BinTable(ky)
+    if setMJD:
+        for ky in psrfits1.draft_hdr_keys[1:]:
+            if ky!='SUBINT' and ky!='PRIMARY' and ky!='POLYCO':
+                psrfits1.copy_template_BinTable(ky)
+    else:
+        for ky in psrfits1.draft_hdr_keys[1:]:
+            if ky!='SUBINT':
+                psrfits1.copy_template_BinTable(ky)
+    # Now if we need to change the date metadata we want to do that all in here
+    if setMJD:
+        print("WE STILL NEED TO FIGURE OUT HOW TO CHANGE THE MJD, CURRENTLY THIS DOES NOTHING!")
     # Make a new subint draft header
     psrfits1.HDU_drafts['SUBINT'] = psrfits1.make_HDU_rec_array(nsubint, psrfits1.subint_dtype)
     #Check that there is something there for all of the headers now. 
@@ -491,3 +554,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         print(FITS.info())
         subint=FITS[4]
         print(subint.data[0][19].shape)
+    # Now we want to return the new MJD value if they have been initialized
+    # NOTE: We will just return the initial observation length to be changed later
+    if setMJD:
+        return [setMJD[0], MJD, SMJD, SOFFS]

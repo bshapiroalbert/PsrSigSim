@@ -8,6 +8,10 @@ import numpy as np
 import h5py
 # from astropy import units as u
 from . import PSS_plot
+# Added import for pdat so we can get the frequency array from the fits file
+import pdat
+# also import os so we can remove the file we create in order to get frequency array
+import os
 
 
 class MetaData(object):
@@ -36,7 +40,8 @@ class Signal(object):
     """The signal class
     """
     def __init__(self, f0=1400, bw=400, Nf=20, f_samp=1, ObsTime=200,
-                 data_type='float32', SignalType="intensity", mode='explore', subintlen = False):
+                 data_type='float32', SignalType="intensity", mode='explore', \
+                 subintlen = False, template=False):
         """initialize Signal(), executed at assignment of new instance
         data_type = 'int8' or 'int16' supported.
                     Automatically changed to 'uint8' or 'uint16' if intensity
@@ -51,6 +56,8 @@ class Signal(object):
                      or 'voltage' which carries a 2 x Nt array of voltage vs.
                      time pulses representing 4 stokes channels
         BRENT HACK: added subint parameter
+        BRENT HACK: Added template file parameter (will be path to template 
+                    psrfits file)
         """
         self.MetaData = MetaData()
         self.f0 = f0  # (MHz)
@@ -61,6 +68,8 @@ class Signal(object):
         self.SignalDict = {}
         self.ObsTime = ObsTime   # Total time in milliseconds
         self.subintlen = subintlen # time in seconds
+        # Added template parameter
+        self.template = template
         #self.SignalFile = None
         # BRENT HACK: Change number of timebins for fold mode pulses
         if subintlen:
@@ -126,20 +135,39 @@ class Signal(object):
 
         self.TimeBinSize = self.ObsTime/self.Nt
         self.freqBinSize = self.bw/self.Nf
-        self.first_freq = self.f0 - self.freqBinSize * self.Nf/2
-        if self.first_freq == 0.0:
-            self.first_freq = self.first_freq + self.freqBinSize * 1e-10
-            print("First Frequency adjusted", self.freqBinSize * 1e-10, "MHz \
-                  away from zero to avoid division errors.")
-        elif self.first_freq < 0.0:
-            raise ValueError("First Frequency Less Than Zero")
-        self.last_freq = self.f0 + self.freqBinSize * self.Nf/2
-        #self.freq_Array = np.linspace(self.first_freq + self.freqBinSize/2,
-        #                              self.last_freq + self.freqBinSize/2,
-        #                              self.Nf, endpoint=False)
-        # BRENT HACK: set frequency bins to be bottom of subbands
-        self.freq_Array = np.arange(self.first_freq,\
-            self.last_freq, self.freqBinSize)
+        """
+        BRENT HACK: If a template file is specified, we will get the frequencies
+        defined here from the template file, otherwise we will generate them
+        from the initial input values.
+        """
+        if template:
+            # Read the fits file and get the frequency data from the array
+            placeholderfits = "TomRiddlesDiary.fits"
+            psrfits1=pdat.psrfits(placeholderfits,from_template=template,obs_mode='PSR')
+            for ky in psrfits1.draft_hdr_keys[1:]:
+                psrfits1.copy_template_BinTable(ky)
+            fitsfreqs = psrfits1.HDU_drafts['SUBINT'][0][16]
+            psrfits1.close()
+            os.remove(placeholderfits)
+            # Now assign the appropriate values
+            self.first_freq = np.min(fitsfreqs)
+            self.last_freq = np.min(fitsfreqs)
+            self.freq_Array = fitsfreqs
+        else:
+            self.first_freq = self.f0 - self.freqBinSize * self.Nf/2
+            if self.first_freq == 0.0:
+                self.first_freq = self.first_freq + self.freqBinSize * 1e-10
+                print("First Frequency adjusted", self.freqBinSize * 1e-10, "MHz \
+                      away from zero to avoid division errors.")
+            elif self.first_freq < 0.0:
+                raise ValueError("First Frequency Less Than Zero")
+            self.last_freq = self.f0 + self.freqBinSize * self.Nf/2
+            #self.freq_Array = np.linspace(self.first_freq + self.freqBinSize/2,
+            #                              self.last_freq + self.freqBinSize/2,
+            #                              self.Nf, endpoint=False)
+            # BRENT HACK: set frequency bins to be bottom of subbands
+            self.freq_Array = np.arange(self.first_freq,\
+                self.last_freq, self.freqBinSize)
 
         #if self.Nt*self.Nf > 500000:  # Limits the array size to 2.048 GB
         print("Array meets size limits, making hdf5 file")

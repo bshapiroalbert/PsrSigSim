@@ -125,7 +125,9 @@ class Simulation(object):
         
         d = self._check_simul_dict(signal_dict)
         self.signal = PSS.Signal(f0 = d['f0'],bw = d['bw'], Nf = d['Nf'], f_samp = d['f_samp'] , ObsTime = d['ObsTime']\
-                                    ,data_type = d['data_type'],SignalType = d['SignalType'], mode = 'simulate', subintlen = d['subintlen'])        
+                                    ,data_type = d['data_type'],SignalType = d['SignalType'], \
+                                    mode = 'simulate', subintlen = d['subintlen'],\
+                                    template = d['tempfits'])        
         
     
     def init_pulsar(self,pulsar_dict = None):
