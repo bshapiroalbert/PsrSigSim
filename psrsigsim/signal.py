@@ -146,7 +146,16 @@ class Signal(object):
             psrfits1=pdat.psrfits(placeholderfits,from_template=template,obs_mode='PSR')
             for ky in psrfits1.draft_hdr_keys[1:]:
                 psrfits1.copy_template_BinTable(ky)
-            fitsfreqs = psrfits1.HDU_drafts['SUBINT'][0][16]
+            subint = psrfits1.draft_hdrs['SUBINT']
+            for ky in subint.keys():
+                if subint[ky] == "DAT_FREQ":
+                    try:
+                        idx = int(ky.split("E")[-1])-1
+                    except:
+                        idx = 15
+            fitsfreqs = psrfits1.HDU_drafts['SUBINT'][0][idx]
+            if fitsfreqs[0] > fitsfreqs[-1]:
+                fitsfreqs = np.flip(fitsfreqs)
             psrfits1.close()
             os.remove(placeholderfits)
             # Now assign the appropriate values
