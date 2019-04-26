@@ -64,7 +64,20 @@ class Simulation(object):
              $ s2.init_pulsar()
              $ s2.init_ism()
              $ s2.init_telescope()
-             $ s2.simulate()"""
+             $ s2.simulate()
+            
+        OPTIONAL PARAMETERS ADDED BY BRENT:
+            subintlen - length of the subintegration if we have some subintegration
+                        length (in seconds).
+            tempfits - template fits file to get data from/save data to. This
+                        should be the full path to the file.
+            phaseconnect - if we want to phase connect the new fits files this
+                        should be set to True. This will overwrite certain
+                        metadata in the psrfits file to trick it into thinking
+                        the simulated data is phase connected regardless of the
+                        MJD of the template fits file.
+             
+             """
         self.psr = psr
         self.sim_telescope = sim_telescope
         self.sim_ism = sim_ism
@@ -291,11 +304,40 @@ class Simulation(object):
             print("Attempting to save signal as a psrfits file...")
             print(np.shape(self.obs_signal))
             nsubint = int(self.pulsar.ObsTime/1000./self.pulsar.subintlen)
-            PSS_utils.save_psrfits(self.obs_signal, template=self.sim_dict['tempfits'], \
-                                   nbin = self.pulsar.nBinsPeriod, nsubint = nsubint, \
-                                   npols = self.pulsar.Npols, \
-                                   nf = self.pulsar.Nf, tsubint = self.pulsar.subintlen,\
-                                   check = True, DM = self.ISM.DM, freqbins = self.signal.freq_Array)
+            
+            # Check to see if things are phase connected or not
+            if 'phaseconnect' in self.sim_dict.keys():
+                if self.sim_dict['phaseconnect'] == True:
+                    print("New simulated fitsfiles will be phase connected.")
+                    # Get the parameters to phase connect the data
+                    obslen = self.signal.ObsTime/1000.0 # from ms to seconds
+                    period = self.signal.MetaData.pulsar_period/1000.0 # from ms to seconds
+                    initMJD = 56000.0
+                    initSMJD = 0.0
+                    initSOFFS = 0.0
+                    setMJD = [obslen, period, initMJD, initSMJD, initSOFFS, True]
+                    # now save the data
+                    setMJD = PSS_utils.save_psrfits(self.obs_signal, template=self.sim_dict['tempfits'], \
+                                          nbin = self.pulsar.nBinsPeriod, nsubint = nsubint, \
+                                          npols = self.pulsar.Npols, \
+                                          nf = self.pulsar.Nf, tsubint = self.pulsar.subintlen,\
+                                          check = True, DM = self.ISM.DM, freqbins = self.signal.freq_Array,
+                                          setMJD = setMJD)
+                # Otherwise we just save it as normal
+                else:
+                    PSS_utils.save_psrfits(self.obs_signal, template=self.sim_dict['tempfits'], \
+                                           nbin = self.pulsar.nBinsPeriod, nsubint = nsubint, \
+                                           npols = self.pulsar.Npols, \
+                                           nf = self.pulsar.Nf, tsubint = self.pulsar.subintlen,\
+                                           check = True, DM = self.ISM.DM, freqbins = self.signal.freq_Array)
+            # If the key isn't in the dictionary, we save as normal
+            else:
+                 PSS_utils.save_psrfits(self.obs_signal, template=self.sim_dict['tempfits'], \
+                                           nbin = self.pulsar.nBinsPeriod, nsubint = nsubint, \
+                                           npols = self.pulsar.Npols, \
+                                           nf = self.pulsar.Nf, tsubint = self.pulsar.subintlen,\
+                                           check = True, DM = self.ISM.DM, freqbins = self.signal.freq_Array)
+
             #except:
             #    print("Damn, we couldn't save this as a psrfits file")
             

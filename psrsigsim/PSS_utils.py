@@ -364,52 +364,57 @@ NOTE: We will assume 10 second subints after how our template file is set up,
 setMJD will allow us to change the initial starting MJD and times, etc, so that
 we can write psrfits files that are phase connected. The input for 'setMJD'
 should be list of input values for the 'nextMJD' function.
+It will also need the period of the pulsar. The initial list should be in the order:
+setMJD = [obslen, period, initMJD, initSMJD, initSOFFS, progress]
+progress - True or False depending on if we should just return the next date or
+            the initial input values.
 
 NOTE: The nextMJD function is meant to work in corrdination with the save_psrfits
 to rewrite date metadata to phase connect simulated data.
 """
-# import necessary packages
-from astropy.time import Time
-from astropy.coordinates import EarthLocation
 
-def nextMJD(obslen, initMJD, initSMJD, initSOFFS, observatory = None):
+def nextMJD(obslen, period, initMJD, initSMJD, initSOFFS, progress = True):
     """
     The purpose of this function is to rewrite the initial date of observation metadata in
     the fits file headers. It will take in the length of the observation in seconds, as well
     as some initial MJD, SMJD (seconds from start of MJD), and initSOFFS (initial seconds 
     offset) and then calculate what the next set of these values, as well as the dates of 
-    observation and file creation in the fits UTC format, and then return these values.
-    It will also take the name of the observatory that we are using.
+    observation and file creation in the fits UTC format, and then return these values. This 
+    will also need to be given the pulse period (in seconds) as an additional correction to SOFFS.
+    We also need to give this function a DM and the central frequency of the template file
+    we have just made to account for what is effectively tiling dispersion in the simulated data.
     
     This is currently implimented only in the save_psrfits function in PSS_utils and is 
     designed to be called only if multiple files are being created in a row so that this will
     hopefully phase connect all files. 
+    
+    If progress = True, then it will return the the next MJD date that is 
+    phase connected. If this is false, it will just return the values that are 
+    input into the function.
     """
-    # Detemine what the next start second offset is:
-    frac_sec = float('0.'+str(obslen).split('.')[-1])
-    # Determine what the MJD increase is
-    obslen_days = obslen / 86400.0 # days
-    # increase all relavent values
-    SOFFS = initSOFFS+frac_sec
-    # Check to make sure that this is less than 1, if not fix it
-    if SOFFS > 1.0:
-        SOFFS = float('0.'+str(SOFFS).split('.')[-1])
-        obslen += 1
-    SMJD = int(np.floor(initSMJD+obslen)) # seconds
-    MJD = initMJD+obslen_days
-    saveMJD = str(int(np.floor(MJD)))
-    # Now we get the new time of observation and time of file creation
-    if observatory == 'GBT':
-        obs_loc = EarthLocation.of_site('GBT').geodetic
-        t = Time(MJD, format = 'mjd', scale = 'utc', location = obs_loc)
+    if progress:
+        # Detemine what the next start second offset is:
+        frac_sec = float('0.'+str(obslen).split('.')[-1])
+        # Determine what the MJD increase is
+        obslen_days = obslen / 86400.0 # days
+        # Add the extra delays to phase connect things up correctly
+        pulseperiods = obslen/period
+        seconds2roundup = (np.ceil(pulseperiods)-pulseperiods)*period # seconds
+        # increase all relavent values
+        print("Uncorrected SOFFS is:", initSOFFS)
+        SOFFS = initSOFFS + frac_sec + seconds2roundup
+        # Check to make sure that this is less than 1, if not fix it
+        print("SOFFS is:", SOFFS)
+        if SOFFS > 1.0:
+            SOFFS = float('0.'+str(SOFFS).split('.')[-1])
+            obslen += 1
+        SMJD = int(np.floor(initSMJD+obslen)) # seconds
+        MJD = initMJD+obslen_days
+        saveMJD = str(int(np.floor(MJD)))
+        #print(SMJD, SOFFS, MJD, saveMJD)
+        return SMJD, SOFFS, MJD, saveMJD
     else:
-        # no built in location for Arecibo?
-        t = Time(MJD, format = 'mjd', scale = 'utc')
-    save_t = t.fits
-    saveDATE = save_t[:-5] # value to save
-    saveDATEOBS = save_t[:-5] # value to save
-    print(SMJD, SOFFS, MJD, saveMJD, saveDATE, saveDATEOBS)
-    return SMJD, SOFFS, MJD, saveMJD, saveDATE, saveDATEOBS
+        return initSMJD, initSOFFS , initMJD, str(int(np.floor(initMJD)))
 
 # import some new packages
 import h5py
@@ -460,8 +465,9 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     
     # Now we get the new MJD values if necessary
     if setMJD:
-        SMJD, SOFFS, MJD, saveMJD, saveDATE, saveDATEOBS = \
-            nextMJD(setMJD[0], setMJD[1], setMJD[2], setMJD[3])
+        SMJD, SOFFS, MJD, saveMJD = \
+            nextMJD(setMJD[0], setMJD[1], setMJD[2], setMJD[3], setMJD[4],\
+                    progress = setMJD[5])
     # define the new psrfits file name
     new_psrfits = "full_signal.fits"
     # define the file(?)
@@ -473,17 +479,17 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         nsubint=nsubint, npol=npols, \
         obs_mode='PSR', data_dtype='>i2')
     # copy over the values that are not the simulated subint data array from template
-    if setMJD:
-        for ky in psrfits1.draft_hdr_keys[1:]:
-            if ky!='SUBINT' and ky!='PRIMARY' and ky!='POLYCO':
-                psrfits1.copy_template_BinTable(ky)
-    else:
-        for ky in psrfits1.draft_hdr_keys[1:]:
-            if ky!='SUBINT':
-                psrfits1.copy_template_BinTable(ky)
+    for ky in psrfits1.draft_hdr_keys[1:]:
+        if ky!='SUBINT':
+            psrfits1.copy_template_BinTable(ky)
     # Now if we need to change the date metadata we want to do that all in here
     if setMJD:
-        print("WE STILL NEED TO FIGURE OUT HOW TO CHANGE THE MJD, CURRENTLY THIS DOES NOTHING!")
+        psrfits1.set_draft_header('PRIMARY',{'STT_IMJD':int(saveMJD), \
+                                             'STT_SMJD':int(SMJD)})
+        # Need to change this but still broken for now...
+        #psrfits1.set_draft_header('PRIMARY',{'STT_OFFS':float(SOFFS)})
+        psrfits1.HDU_drafts['POLYCO'][0][8] = MJD
+        
     # Make a new subint draft header
     psrfits1.HDU_drafts['SUBINT'] = psrfits1.make_HDU_rec_array(nsubint, psrfits1.subint_dtype)
     #Check that there is something there for all of the headers now. 
@@ -557,4 +563,4 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     # Now we want to return the new MJD value if they have been initialized
     # NOTE: We will just return the initial observation length to be changed later
     if setMJD:
-        return [setMJD[0], MJD, SMJD, SOFFS]
+        return [setMJD[0], setMJD[1], MJD, SMJD, SOFFS, setMJD[5]]
