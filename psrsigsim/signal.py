@@ -161,9 +161,9 @@ class Signal(object):
             # Need to adjust so the frequencies are referenced to the bottom of the band
             channelwidth = fitsfreqs[1]-fitsfreqs[0]
             # Now assign the appropriate values
-            self.first_freq = np.min(fitsfreqs)-channelwidth/2.0
-            self.last_freq = np.max(fitsfreqs)-channelwidth/2.0
-            self.freq_Array = fitsfreqs-channelwidth/2.0
+            self.first_freq = np.min(fitsfreqs)#-channelwidth/2.0
+            self.last_freq = np.max(fitsfreqs)#-channelwidth/2.0
+            self.freq_Array = fitsfreqs#-channelwidth/2.0
         else:
             self.first_freq = self.f0 - self.freqBinSize * self.Nf/2
             if self.first_freq == 0.0:

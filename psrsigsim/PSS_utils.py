@@ -401,10 +401,8 @@ def nextMJD(obslen, period, initMJD, initSMJD, initSOFFS, progress = True):
         pulseperiods = obslen/period
         seconds2roundup = (np.ceil(pulseperiods)-pulseperiods)*period # seconds
         # increase all relavent values
-        print("Uncorrected SOFFS is:", initSOFFS)
         SOFFS = initSOFFS + frac_sec + seconds2roundup
         # Check to make sure that this is less than 1, if not fix it
-        print("SOFFS is:", SOFFS)
         if SOFFS > 1.0:
             SOFFS = float('0.'+str(SOFFS).split('.')[-1])
             obslen += 1
