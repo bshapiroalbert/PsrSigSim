@@ -68,7 +68,7 @@ class ISM(object):
             #For intensity signal calculate dispersion for all sub-bands.
             self.K = 1.0/2.41e-4 #constant used to be more consistent with PSRCHIVE
             #self.time_delays = -1e-3*self.K*self.DM*(np.power((self.freq_Array/1e3),-2)) #freq in MHz, delays in milliseconds
-            self.time_delays = np.double(-1e-3)*np.double(self.K)*np.double(self.DM)\
+            self.time_delays = np.double(1e-3)*np.double(self.K)*np.double(self.DM)\
                 *(np.power((np.double(self.freq_Array)/np.double(1e3)),np.double(-2))) #freq in MHz, delays in milliseconds
             # BRENT HACK:
             # Testing out changing the DM delay to be refrenced from min freq
