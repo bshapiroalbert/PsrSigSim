@@ -497,8 +497,13 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     # copy over the values that are not the simulated subint data array from template
     for ky in psrfits1.draft_hdr_keys[1:]:
         if ky!='SUBINT':
-            psrfits1.copy_template_BinTable(ky)
-    # Now if we need to change the date metadata we want to do that all in here
+            psrfits1.copy_template_BinTable(ky)        
+    # Make a new subint draft header
+    psrfits1.HDU_drafts['SUBINT'] = psrfits1.make_HDU_rec_array(nsubint, psrfits1.subint_dtype)
+    #Check that there is something there for all of the headers now. 
+    print([val is not None for val in psrfits1.HDU_drafts.values()])
+    
+        # Now if we need to change the date metadata we want to do that all in here
     if setMJD:
         psrfits1.set_draft_header('PRIMARY',{'STT_IMJD':int(saveMJD), \
                                              'STT_SMJD':int(SMJD),\
@@ -511,11 +516,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
                 offsubidx = int(ky.split("E")[-1])-1
         for i in range(nsubint):
             psrfits1.HDU_drafts['SUBINT'][i][offsubidx] = saveOFFSUB
-        
-    # Make a new subint draft header
-    psrfits1.HDU_drafts['SUBINT'] = psrfits1.make_HDU_rec_array(nsubint, psrfits1.subint_dtype)
-    #Check that there is something there for all of the headers now. 
-    print([val is not None for val in psrfits1.HDU_drafts.values()])
+    
     # Change polarization type
     psrfits1.set_draft_header('SUBINT',{'POL_TYPE':'AA+BB'})
     # Change the DM value if necessary
