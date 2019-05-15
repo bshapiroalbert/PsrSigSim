@@ -13,6 +13,7 @@ import os.path
 import h5py
 from psrsigsim import PSS_utils
 import numpy as np
+import pdat
 
 d_path = os.path.dirname(__file__)
 
@@ -310,19 +311,42 @@ class Simulation(object):
                 if self.sim_dict['phaseconnect'] == True:
                     print("New simulated fitsfiles will be phase connected.")
                     # Get the parameters to phase connect the data
+                    # setMJD = [obslen, period, initMJD, initSMJD, initSOFFS, initOFFSUB, increment_length]
                     obslen = self.signal.ObsTime/1000.0 # from ms to seconds
                     period = self.signal.MetaData.pulsar_period/1000.0 # from ms to seconds
-                    initMJD = 56000.0
-                    initSMJD = 0.0
-                    initSOFFS = 0.0
-                    setMJD = [obslen, period, initMJD, initSMJD, initSOFFS, True]
+                    if self.sim_dict['Start_MJD']:
+                        initMJD = self.sim_dict['Start_MJD'][0]
+                        initSMJD = self.sim_dict['Start_MJD'][1]
+                        initSOFFS = self.sim_dict['Start_MJD'][2]
+                    else:
+                        initMJD = 56000.0
+                        initSMJD = 0.0
+                        initSOFFS = 0.5
+                    # Get a guess for the initial subint offset from the file itself
+                    psrfits1=pdat.psrfits('dataslave.fits',from_template=self.sim_dict['tempfits'],obs_mode='PSR')
+                    for ky in psrfits1.draft_hdr_keys[1:]:
+                        psrfits1.copy_template_BinTable(ky)
+                    subint = psrfits1.draft_hdrs['SUBINT']
+                    for ky in subint.keys():
+                        if subint[ky] == "OFFS_SUB":
+                            idx3 = int(ky.split("E")[-1])-1
+                    OFFS_SUB = psrfits1.HDU_drafts['SUBINT'][0][idx3]
+                    psrfits1.close()
+                    os.remove('dataslave.fits')
+                    # Now get the incriment length, either predefined or not
+                    if self.sim_dict['increment_length']:
+                        inc_len = self.sim_dict['increment_length']
+                    else:
+                        inc_len = 0.0
+                    # Now define the list
+                    setMJD = [obslen, period, initMJD, initSMJD, initSOFFS, OFFS_SUB, inc_len]
                     # now save the data
-                    setMJD = PSS_utils.save_psrfits(self.obs_signal, template=self.sim_dict['tempfits'], \
-                                          nbin = self.pulsar.nBinsPeriod, nsubint = nsubint, \
-                                          npols = self.pulsar.Npols, \
-                                          nf = self.pulsar.Nf, tsubint = self.pulsar.subintlen,\
-                                          check = True, DM = self.ISM.DM, freqbins = self.signal.freq_Array,
-                                          setMJD = setMJD)
+                    PSS_utils.save_psrfits(self.obs_signal, template=self.sim_dict['tempfits'], \
+                                  nbin = self.pulsar.nBinsPeriod, nsubint = nsubint, \
+                                  npols = self.pulsar.Npols, \
+                                  nf = self.pulsar.Nf, tsubint = self.pulsar.subintlen,\
+                                  check = True, DM = self.ISM.DM, freqbins = self.signal.freq_Array,
+                                  setMJD = setMJD)
                 # Otherwise we just save it as normal
                 else:
                     PSS_utils.save_psrfits(self.obs_signal, template=self.sim_dict['tempfits'], \
