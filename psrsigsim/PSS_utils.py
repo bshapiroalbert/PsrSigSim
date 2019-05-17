@@ -507,7 +507,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     if setMJD:
         psrfits1.set_draft_header('PRIMARY',{'STT_IMJD':int(saveMJD), \
                                              'STT_SMJD':int(SMJD),\
-                                             'STT_OFFS':float(SOFFS)})
+                                             'STT_OFFS':np.float64(SOFFS)})
         psrfits1.HDU_drafts['POLYCO'][0][8] = MJD
         # change the subintegration offset
         subint = psrfits1.draft_hdrs['SUBINT']
@@ -549,7 +549,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     #Assign all of the arrays to the draft SUBINT
     #The first two assignments are new, the rest are just copies (of the pertinent parts of the the old file)
     for ii in range(nsubint):
-        psrfits1.HDU_drafts['SUBINT'][ii]['OFFS_SUB'] = offs_sub[ii]
+        #psrfits1.HDU_drafts['SUBINT'][ii]['OFFS_SUB'] = offs_sub[ii]
         psrfits1.HDU_drafts['SUBINT'][ii]['DATA'] = Out[ii,0,:,:]
         psrfits1.HDU_drafts['SUBINT'][ii]['DAT_SCL'] = templ_subint[ii]['DAT_SCL'][:,:nf*npols]
         psrfits1.HDU_drafts['SUBINT'][ii]['DAT_OFFS'] = templ_subint[ii]['DAT_OFFS'][:,:nf*npols]
