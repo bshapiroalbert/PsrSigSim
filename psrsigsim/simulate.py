@@ -325,13 +325,13 @@ class Simulation(object):
                     obslen = self.signal.ObsTime/1000.0 # from ms to seconds
                     period = self.signal.MetaData.pulsar_period/1000.0 # from ms to seconds
                     if 'Start_MJD' in self.sim_dict.keys():
-                        print("get initialized start MJDs, etc.")
+                        print("get initialized start MJDs, etc. (GOOD)")
                         initMJD = self.sim_dict['Start_MJD'][0]
                         initSMJD = self.sim_dict['Start_MJD'][1]
                         initSOFFS = self.sim_dict['Start_MJD'][2]
                         # Now check to see if the offset is given
                         if len(self.sim_dict['Start_MJD']) == 4:
-                            print("getting initialized offsub value", self.sim_dict['Start_MJD'][3])
+                            print("getting initialized offsub value (GOOD)", self.sim_dict['Start_MJD'][3])
                             OFFS_SUB = self.sim_dict['Start_MJD'][3]
                         else:
                             print("gonna fuck up your phase connection probaby")

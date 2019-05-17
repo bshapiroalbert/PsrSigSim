@@ -501,7 +501,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     # Make a new subint draft header
     psrfits1.HDU_drafts['SUBINT'] = psrfits1.make_HDU_rec_array(nsubint, psrfits1.subint_dtype)
     #Check that there is something there for all of the headers now. 
-    p#rint([val is not None for val in psrfits1.HDU_drafts.values()])
+    #print([val is not None for val in psrfits1.HDU_drafts.values()])
     
         # Now if we need to change the date metadata we want to do that all in here
     if setMJD:
