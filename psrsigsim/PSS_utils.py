@@ -442,7 +442,7 @@ import astropy.io.fits as F
 def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     nf = 512, tsubint = 10.0, nsubintcorr = False, check = False, DM = None, \
     freqbins = None, setMJD = None):
-    print("Attempting to save signal as psrfits")
+    #print("Attempting to save signal as psrfits")
     # NEW HACK: Must save 64 subints for now so just add zeros to the data if not correct nsubint
     # May not want to reassign the number of subints, so we add a flag for that...
     if nsubint != 64 and nsubintcorr == True:
@@ -489,7 +489,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     # define the file(?)
     psrfits1=pdat.psrfits(new_psrfits,from_template=template,obs_mode='PSR')
     # Check `dtype`
-    print(psrfits1.fits_template[4]['DATA'][:].dtype)
+    #print(psrfits1.fits_template[4]['DATA'][:].dtype)
     # use template file dimensions with minor changes
     psrfits1.set_subint_dims(nbin=nbin, nsblk=1, nchan=nf, \
         nsubint=nsubint, npol=npols, \
@@ -501,7 +501,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     # Make a new subint draft header
     psrfits1.HDU_drafts['SUBINT'] = psrfits1.make_HDU_rec_array(nsubint, psrfits1.subint_dtype)
     #Check that there is something there for all of the headers now. 
-    print([val is not None for val in psrfits1.HDU_drafts.values()])
+    p#rint([val is not None for val in psrfits1.HDU_drafts.values()])
     
         # Now if we need to change the date metadata we want to do that all in here
     if setMJD:
@@ -535,7 +535,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         psrfits1.HDU_drafts['SUBINT'][col][:] = copy_cols[col][:]
     
     # Check to see that they've been copied
-    print(psrfits1.HDU_drafts['SUBINT']['RA_SUB'])
+    #print(psrfits1.HDU_drafts['SUBINT']['RA_SUB'])
     
     #Reassign the template values for shorter name
     templ_subint = psrfits1.fits_template[4]
@@ -559,7 +559,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         psrfits1.HDU_drafts['SUBINT'][ii]['DAT_FREQ'] = freqbins
         psrfits1.HDU_drafts['SUBINT'][ii]['DAT_WTS'] = templ_subint[ii]['DAT_WTS']
     # Check dtype
-    print(psrfits1.HDU_drafts['SUBINT'][0]['DAT_OFFS'].dtype)
+    #print(psrfits1.HDU_drafts['SUBINT'][0]['DAT_OFFS'].dtype)
     """
     #A different list of the floating points
     one_off_floats = ['TSUBINT','OFFS_SUB','LST_SUB','RA_SUB',\
@@ -571,7 +571,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         print(psrfits1.HDU_drafts['SUBINT'][param])
     """
     # Check the new number of rows
-    print(psrfits1.draft_hdrs['SUBINT']['NAXIS2'])
+    #print(psrfits1.draft_hdrs['SUBINT']['NAXIS2'])
     # Since PSRFITS can't be edited, need to make drafts and then write them all at the same time
     # Hopefully we can ignore any output errors as suggested
     psrfits1.write_psrfits(hdr_from_draft=True)

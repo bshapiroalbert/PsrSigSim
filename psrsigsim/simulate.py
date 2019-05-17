@@ -272,10 +272,10 @@ class Simulation(object):
                     dt_tel = (self.signal.subintlen/nbins_per_subint) *1000.0 # convert from seconds to ms
                     # Still some issue with this one, now it's not strong enough
                     #dt_tel = self.signal.MetaData.pulsar_period/nbins_per_subint # ms
-                    print("Using subintlength for dt in ms", dt_tel)
+                    #print("Using subintlength for dt in ms", dt_tel)
                 else:
                     dt_tel = self.signal.TimeBinSize
-                print(dt_tel)
+                #print(dt_tel)
                 # Top version is just the noise with no signal in it...
                 #self.obs_signal = self.telescope.radiometer_noise(self.signal,[self.signal.Nf, self.signal.Nt], dt_tel)
                 # Now we add the signal to the radiometer noise, so it's actually the observed signal
@@ -302,11 +302,21 @@ class Simulation(object):
             # Now we also want to try to save this data as a psrfits file
             # added template file to input dictionary
             #try:
-            print("Attempting to save signal as a psrfits file...")
-            print(np.shape(self.obs_signal))
+            #print("Attempting to save signal as a psrfits file...")
+            #print(np.shape(self.obs_signal))
             nsubint = int(self.pulsar.ObsTime/1000./self.pulsar.subintlen)
             
             # Check to see if things are phase connected or not
+            
+            """
+            The initial subint offset is really the key section for 
+            phase connection here. It must be the same as whatever
+            the 'first' file in a phase connected set of simulations is
+            so it must utilize the same template file. I think then that
+            it should be given, but if it's not, then we can just get the
+            value from the template file.
+            """
+            
             if 'phaseconnect' in self.sim_dict.keys():
                 if self.sim_dict['phaseconnect'] == True:
                     print("New simulated fitsfiles will be phase connected.")
@@ -314,37 +324,28 @@ class Simulation(object):
                     # setMJD = [obslen, period, initMJD, initSMJD, initSOFFS, initOFFSUB, increment_length]
                     obslen = self.signal.ObsTime/1000.0 # from ms to seconds
                     period = self.signal.MetaData.pulsar_period/1000.0 # from ms to seconds
-                    if self.sim_dict['Start_MJD']:
+                    if 'Start_MJD' in self.sim_dict.keys():
+                        print("get initialized start MJDs, etc.")
                         initMJD = self.sim_dict['Start_MJD'][0]
                         initSMJD = self.sim_dict['Start_MJD'][1]
                         initSOFFS = self.sim_dict['Start_MJD'][2]
+                        # Now check to see if the offset is given
+                        if len(self.sim_dict['Start_MJD']) == 4:
+                            print("getting initialized offsub value", self.sim_dict['Start_MJD'][3])
+                            OFFS_SUB = self.sim_dict['Start_MJD'][3]
+                        else:
+                            print("gonna fuck up your phase connection probaby")
+                            OFFS_SUB = 0.5
+                    # Otherwise use predetermined values
                     else:
+                        print("Using predetermined phase values")
                         initMJD = 56000.0
                         initSMJD = 0.0
                         initSOFFS = 0.5
-                    """
-                    The initial subint offset is really the key section for 
-                    phase connection here. It must be the same as whatever
-                    the 'first' file in a phase connected set of simulations is
-                    so it must utilize the same template file. I think then that
-                    it should be given, but if it's not, then we can just get the
-                    value from the template file.
-                    """
-                    if self.sim_dict['Start_MJD'][3]:
-                        OFFS_SUB = self.sim_dict['Start_MJD'][3]
-                    else:
-                        psrfits1=pdat.psrfits('dataslave.fits',from_template=self.sim_dict['tempfits'],obs_mode='PSR')
-                        for ky in psrfits1.draft_hdr_keys[1:]:
-                            psrfits1.copy_template_BinTable(ky)
-                        subint = psrfits1.draft_hdrs['SUBINT']
-                        for ky in subint.keys():
-                            if subint[ky] == "OFFS_SUB":
-                                idx3 = int(ky.split("E")[-1])-1
-                        OFFS_SUB = psrfits1.HDU_drafts['SUBINT'][0][idx3]
-                        psrfits1.close()
-                        os.remove('dataslave.fits')
+                        OFFS_SUB = 0.5
+                        
                     # Now get the incriment length, either predefined or not
-                    if self.sim_dict['increment_length']:
+                    if 'increment_length' in self.sim_dict.keys():
                         inc_len = self.sim_dict['increment_length']
                     else:
                         inc_len = 0.0
