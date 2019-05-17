@@ -322,17 +322,27 @@ class Simulation(object):
                         initMJD = 56000.0
                         initSMJD = 0.0
                         initSOFFS = 0.5
-                    # Get a guess for the initial subint offset from the file itself
-                    psrfits1=pdat.psrfits('dataslave.fits',from_template=self.sim_dict['tempfits'],obs_mode='PSR')
-                    for ky in psrfits1.draft_hdr_keys[1:]:
-                        psrfits1.copy_template_BinTable(ky)
-                    subint = psrfits1.draft_hdrs['SUBINT']
-                    for ky in subint.keys():
-                        if subint[ky] == "OFFS_SUB":
-                            idx3 = int(ky.split("E")[-1])-1
-                    OFFS_SUB = psrfits1.HDU_drafts['SUBINT'][0][idx3]
-                    psrfits1.close()
-                    os.remove('dataslave.fits')
+                    """
+                    The initial subint offset is really the key section for 
+                    phase connection here. It must be the same as whatever
+                    the 'first' file in a phase connected set of simulations is
+                    so it must utilize the same template file. I think then that
+                    it should be given, but if it's not, then we can just get the
+                    value from the template file.
+                    """
+                    if self.sim_dict['Start_MJD'][3]:
+                        OFFS_SUB = self.sim_dict['Start_MJD'][3]
+                    else:
+                        psrfits1=pdat.psrfits('dataslave.fits',from_template=self.sim_dict['tempfits'],obs_mode='PSR')
+                        for ky in psrfits1.draft_hdr_keys[1:]:
+                            psrfits1.copy_template_BinTable(ky)
+                        subint = psrfits1.draft_hdrs['SUBINT']
+                        for ky in subint.keys():
+                            if subint[ky] == "OFFS_SUB":
+                                idx3 = int(ky.split("E")[-1])-1
+                        OFFS_SUB = psrfits1.HDU_drafts['SUBINT'][0][idx3]
+                        psrfits1.close()
+                        os.remove('dataslave.fits')
                     # Now get the incriment length, either predefined or not
                     if self.sim_dict['increment_length']:
                         inc_len = self.sim_dict['increment_length']
