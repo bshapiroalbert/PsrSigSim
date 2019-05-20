@@ -382,8 +382,8 @@ NOTE: The nextMJD function is meant to work in corrdination with the save_psrfit
 to rewrite date metadata to phase connect simulated data.
 """
 
-def nextMJD(obslen, period, initMJD = 56000, initSMJD = 0.0, initSOFFS = 0.0, \
-            initOFFSUB = 42.32063, increment_length = 0.0):
+def nextMJD(obslen, period, initMJD, initSMJD, initSOFFS, initOFFSUB = 42.32063, \
+            nsubint = 1, increment_length = 0.0):
     """
     The purpose of this function is to rewrite the initial date of observation metadata in
     the fits file headers. It will take in the length of the current observation in seconds, 
@@ -399,6 +399,8 @@ def nextMJD(obslen, period, initMJD = 56000, initSMJD = 0.0, initSOFFS = 0.0, \
     in units of 'days' (hours are percentages of days, etc.) and the function will return
     phase connected times as close to those incriments as possible.
     
+    nsubint is the number of subintegrations there are in the file.
+    
     This is currently implimented only in the save_psrfits function in PSS_utils and is 
     designed to be called only if multiple files are being created in a row so that this will
     hopefully phase connect all files. 
@@ -412,9 +414,30 @@ def nextMJD(obslen, period, initMJD = 56000, initSMJD = 0.0, initSOFFS = 0.0, \
         SOFFS = initSOFFS
         MJD = initMJD+np.float64((initSMJD+initSOFFS)/86400.0)
         saveMJD = str(int(np.floor(MJD)))
-        newOFFSUB = initOFFSUB # assumption->referenced to current L-band template
+        # Get the list of offsubs for multiple subintegrations
+        if nsubint == 1:
+            newOFFSUBs = [initOFFSUB] # assumption->referenced to current L-band template
+        else:
+            #initialize list of offsubs
+            newOFFSUBs  = []
+            # get length of a subint
+            tsubint = obslen/nsubint # seconds
+            # Get the first subint
+            newOFFSUBs.append(np.float64(tsubint/2.0))
+            first_offsub = np.float64(tsubint/2.0)
+            # Get the subintlength in numer of periods
+            psubint = tsubint/period # seconds/seconds -> periods per subint
+            # Now round up for an integer number
+            tsub_up = np.ceil(psubint)*period # seconds
+            # Now loop through to get the rest
+            for i in range(nsubint-1):
+                # This is the next one
+                nextoffsub = first_offsub + tsub_up
+                newOFFSUBs.append(nextoffsub)
+                first_offsub = nextoffsub
+                
         #print(SMJD, SOFFS, MJD, saveMJD, saveDATE, saveDATEOBS, newOFFSUB)
-        return  SMJD, SOFFS, MJD, saveMJD, newOFFSUB
+        return  SMJD, SOFFS, MJD, saveMJD, newOFFSUBs
     
     else:
         # Determine what the MJD increase is
@@ -424,15 +447,39 @@ def nextMJD(obslen, period, initMJD = 56000, initSMJD = 0.0, initSOFFS = 0.0, \
         seconds = np.float64("0."+str(MJD).split('.')[-1])*86400.0
         SMJD = int(np.floor(seconds))
         SOFFS = np.float64('0.'+str(seconds).split('.')[-1])#+arb_correct
-        # Now we figure out what the center of the subint should be to phase connect
-        initCenter = np.float64(initMJD)+np.float64((initOFFSUB+initSMJD+initSOFFS)/86400.0) # days
-        newCenter = np.float64(MJD+np.float64(obslen/2.0/86400.0)) # days
-        centerDiff = np.float64((newCenter-initCenter)*86400.0) # seconds
-        period_to_add = np.float64(period - (centerDiff % period)) # seconds
-        newOFFSUB = np.float64(obslen/2.0+period_to_add)
+        # Get the list of offsubs for multiple subintegrations
+        if nsubint == 1:
+            # Now we figure out what the center of the subint should be to phase connect
+            initCenter = np.float64(initMJD)+np.float64((initOFFSUB+initSMJD+initSOFFS)/86400.0) # days
+            newCenter = np.float64(MJD+np.float64(obslen/2.0/86400.0)) # days
+            centerDiff = np.float64((newCenter-initCenter)*86400.0) # seconds
+            period_to_add = np.float64(period - (centerDiff % period)) # seconds
+            newOFFSUBs = [np.float64(obslen/2.0+period_to_add)]
+        else:
+            #initialize list of offsubs
+            newOFFSUBs  = []
+            # get length of a subint
+            tsubint = obslen/nsubint # seconds
+            # Get the first subint - center is referenced to first subint here
+            initCenter = np.float64(initMJD)+np.float64((initOFFSUB+initSMJD+initSOFFS)/86400.0) # days
+            newCenter = np.float64(MJD+np.float64((tsubint/2.0)/86400.0)) # days
+            centerDiff = np.float64((newCenter-initCenter)*86400.0) # seconds
+            period_to_add = np.float64(period - (centerDiff % period)) # seconds
+            first_offsub = np.float64(tsubint/2.0+period_to_add)
+            newOFFSUBs.append(first_offsub)
+            # Get the subintlength in numer of periods
+            psubint = tsubint/period # seconds/seconds -> periods per subint
+            # Now round up for an integer number
+            tsub_up = np.ceil(psubint)*period # seconds
+            # Now loop through to get the rest
+            for i in range(nsubint-1):
+                # This is the next one
+                nextoffsub = first_offsub + tsub_up
+                newOFFSUBs.append(nextoffsub)
+                first_offsub = nextoffsub
         
         #print(SMJD, SOFFS, MJD, saveMJD, saveDATE, saveDATEOBS, newOFFSUB)
-        return SMJD, SOFFS, MJD, saveMJD, newOFFSUB
+        return SMJD, SOFFS, MJD, saveMJD, newOFFSUBs
 
 # import some new packages
 import h5py
@@ -483,7 +530,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
          SMJD, SOFFS, MJD, saveMJD, saveOFFSUB = \
             nextMJD(setMJD[0], setMJD[1], initMJD = setMJD[2], initSMJD = setMJD[3], \
                     initSOFFS = setMJD[4], initOFFSUB = setMJD[5],\
-                    increment_length = setMJD[6])
+                    nsubint = nsubint, increment_length = setMJD[6])
     # define the new psrfits file name
     new_psrfits = "full_signal.fits"
     # define the file(?)
@@ -515,7 +562,7 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
             if subint[ky] == "OFFS_SUB":
                 offsubidx = int(ky.split("E")[-1])-1
         for i in range(nsubint):
-            psrfits1.HDU_drafts['SUBINT'][i][offsubidx] = saveOFFSUB
+            psrfits1.HDU_drafts['SUBINT'][i][offsubidx] = saveOFFSUB[i]
     
     # Change polarization type
     psrfits1.set_draft_header('SUBINT',{'POL_TYPE':'AA+BB'})
