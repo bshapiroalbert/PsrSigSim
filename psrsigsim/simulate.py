@@ -355,7 +355,7 @@ class Simulation(object):
                                   nbin = self.pulsar.nBinsPeriod, nsubint = nsubint, \
                                   npols = self.pulsar.Npols, \
                                   nf = self.pulsar.Nf, tsubint = self.pulsar.subintlen,\
-                                  check = True, DM = self.ISM.DM, freqbins = self.signal.freq_Array,
+                                  check = False, DM = self.ISM.DM, freqbins = self.signal.freq_Array,
                                   setMJD = setMJD)
                 # Otherwise we just save it as normal
                 else:
@@ -363,14 +363,14 @@ class Simulation(object):
                                            nbin = self.pulsar.nBinsPeriod, nsubint = nsubint, \
                                            npols = self.pulsar.Npols, \
                                            nf = self.pulsar.Nf, tsubint = self.pulsar.subintlen,\
-                                           check = True, DM = self.ISM.DM, freqbins = self.signal.freq_Array)
+                                           check = False, DM = self.ISM.DM, freqbins = self.signal.freq_Array)
             # If the key isn't in the dictionary, we save as normal
             else:
                  PSS_utils.save_psrfits(self.obs_signal, template=self.sim_dict['tempfits'], \
                                            nbin = self.pulsar.nBinsPeriod, nsubint = nsubint, \
                                            npols = self.pulsar.Npols, \
                                            nf = self.pulsar.Nf, tsubint = self.pulsar.subintlen,\
-                                           check = True, DM = self.ISM.DM, freqbins = self.signal.freq_Array)
+                                           check = False, DM = self.ISM.DM, freqbins = self.signal.freq_Array)
 
             #except:
             #    print("Damn, we couldn't save this as a psrfits file")
