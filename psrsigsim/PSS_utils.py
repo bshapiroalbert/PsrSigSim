@@ -555,7 +555,20 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         psrfits1.set_draft_header('PRIMARY',{'STT_IMJD':int(saveMJD), \
                                              'STT_SMJD':int(SMJD),\
                                              'STT_OFFS':np.float64(SOFFS)})
-        psrfits1.HDU_drafts['POLYCO'][0][8] = MJD
+        try:
+            # If we have a normal fits file this will work fine
+            psrfits1.HDU_drafts['POLYCO'][0][8] = MJD
+        except:
+            """If we have the file put together by psradd, it doesn't have a 
+            'POLYCO' header, instead it has 'T2PREDICT' which has a time range
+            parameter to be replaced instead."""
+            #print("No POLYCO header, replacing T2PREDICT TIME_RANGE instead")
+            trange_start = np.float64(MJD - (setMJD[0]/86400.0))
+            trange_stop = np.float64(MJD + 2*(setMJD[0]/86400.0))
+            predict_replace = "TIME_RANGE %s %s" % (trange_start, trange_stop)
+            #print(predict_replace)
+            psrfits1.HDU_drafts['T2PREDICT'][4][0] = predict_replace
+            
         # change the subintegration offset
         subint = psrfits1.draft_hdrs['SUBINT']
         for ky in subint.keys():
