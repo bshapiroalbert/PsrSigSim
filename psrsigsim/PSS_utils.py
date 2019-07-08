@@ -570,12 +570,15 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
             psrfits1.HDU_drafts['T2PREDICT'][4][0] = predict_replace
             
         # change the subintegration offset
+        """
+        # WE HAVE COMMENTED THIS OUT FOR TESTING POLYCO EDITING PURPOSES!
         subint = psrfits1.draft_hdrs['SUBINT']
         for ky in subint.keys():
             if subint[ky] == "OFFS_SUB":
                 offsubidx = int(ky.split("E")[-1])-1
         for i in range(nsubint):
             psrfits1.HDU_drafts['SUBINT'][i][offsubidx] = saveOFFSUB[i]
+        """
     
     # Change polarization type
     psrfits1.set_draft_header('SUBINT',{'POL_TYPE':'AA+BB'})
@@ -609,7 +612,9 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
     #Assign all of the arrays to the draft SUBINT
     #The first two assignments are new, the rest are just copies (of the pertinent parts of the the old file)
     for ii in range(nsubint):
-        #psrfits1.HDU_drafts['SUBINT'][ii]['OFFS_SUB'] = offs_sub[ii]
+        # WE HAVE UNCOMMENTED THIS FOR POLYCO EDITING TESTING PURPOSES!
+        psrfits1.HDU_drafts['SUBINT'][ii]['OFFS_SUB'] = offs_sub[ii]
+        
         psrfits1.HDU_drafts['SUBINT'][ii]['DATA'] = Out[ii,0,:,:]
         psrfits1.HDU_drafts['SUBINT'][ii]['DAT_SCL'] = templ_subint[ii]['DAT_SCL'][:,:nf*npols]
         psrfits1.HDU_drafts['SUBINT'][ii]['DAT_OFFS'] = templ_subint[ii]['DAT_OFFS'][:,:nf*npols]
