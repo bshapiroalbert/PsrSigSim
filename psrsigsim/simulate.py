@@ -162,7 +162,13 @@ class Simulation(object):
         
         @param dm -- dispersion measure"""
         d = self._check_simul_dict(ism_dict)
-        self.ISM = PSS.ISM(self.signal, DM = d['dm']) 
+        # BRENT HACK: Added failsafe to input default values into the dictionary so it doesn't crash if nothing is input
+        if "dm" not in d.keys():
+            d['dm'] = 0.0
+        if "FD" not in d.keys():
+            d['FD'] = [0.0]
+        # BRENT HACK: Added FD parameter class to theISm class as part of the input dictionary
+        self.ISM = PSS.ISM(self.signal, DM = d['dm'], FDs = d['FD']) 
         
         
         
@@ -255,6 +261,13 @@ class Simulation(object):
         
         try:
             self.ISM.disperse()
+            
+        except AttributeError:
+            pass
+        
+        # BRENT HACK: We have added this function to shift the profiles given some FD parameters
+        try:
+            self.ISM.FD_Shift()
             
         except AttributeError:
             pass

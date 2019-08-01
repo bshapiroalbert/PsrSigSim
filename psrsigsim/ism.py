@@ -17,7 +17,8 @@ use_pyfftw = False
 __all__ = ['ISM','scintillate','convolve_with_profile','make_dm_broaden_tophat','make_scatter_broaden_exp']
 
 class ISM(object):
-    def __init__(self, Signal_in, DM = 30):
+    # BRENT HACK: We have added a new FD parameter value that must be used to initailize the ISM class
+    def __init__(self, Signal_in, DM = 30, FDs = [0.0]):
         self.Signal_in = Signal_in
         self.signal = self.Signal_in.signal
         self.MD = Signal_in.MetaData
@@ -31,6 +32,8 @@ class ISM(object):
         self.last_freq = self.Signal_in.last_freq
         self.freq_Array = self.Signal_in.freq_Array
         self.DM = DM
+        # Added FD parameters
+        self.FDs = FDs
         self.tau_scatter = None
         self.to_DM_Broaden = False
         self.to_Scatter_Broaden_exp = False
@@ -50,13 +53,15 @@ class ISM(object):
     def finalize_ism(self):
         if self.MD.mode=='explore':
             raise ValueError('No Need to run finalize_ism() if simulator is in explore mode.')
-        self.ISM_Dict = dict(tau_scatter = self.tau_scatter, DM = self.DM, dispersion=False, scattering=False, scintillation=False)
+        self.ISM_Dict = dict(tau_scatter = self.tau_scatter, DM = self.DM, FDs = self.FDs, dispersion=False, scattering=False, scintillation=False)
         self.ISM_Dict['to_DM_Broaden'] = self.to_DM_Broaden
         self.ISM_Dict['to_Scatter_Broaden_exp'] = self.to_Scatter_Broaden_exp
         self.ISM_Dict['to_Scatter_Broaden_stoch'] = self.to_Scatter_Broaden_stoch
         self.ISM_Dict['time_dependent_scatter'] = self.time_dependent_scatter
         self.ISM_Dict['time_dependent_DM'] = self.time_dependent_DM
         self.ISM_Dict['dispersed'] = False
+        # Added FD Shifted parameter
+        self.ISM_Dict['FD_shifted'] = False
         self.ISM_Dict['to_Scintillate'] = self.to_Scintillate
         self.Signal_in.MetaData.AddInfo(self.ISM_Dict)
 
@@ -117,6 +122,52 @@ class ISM(object):
             self._disperse_baseband()
 
         self.ISM_Dict['dispersed'] = True
+        self.Signal_in.MetaData.AddInfo(self.ISM_Dict)
+        
+    # BRENT HACK:
+    def FD_Shift(self):
+        """
+        This is caluclate the delay that will be added due to an arbitrary number 
+        of input FD parameters following the NANOGrav standard as defined in 
+        Arzoumanian et al. 2016. It will then shift the pulse profiles by the 
+        appropriate amount based on these parameters
+        """
+        # calculate the delay added in for the parameters
+        self.FD_delay = np.zeros(len(self.freq_Array)) # will be in seconds
+        k = 0
+        for FD in self.FDs:
+            self.FD_delay += np.double(FD) * \
+                    np.power(np.double(np.log10(np.double(self.freq_Array)/np.double(1000.0))),np.double(k+1)) # will be in seconds
+            k += 1
+        # convert seconds to ms
+        self.FD_delay *= 1000.0
+        # Get the time bin size as necessary in the dispersion function
+        if self.Signal_in.subintlen:
+            pulse_period = self.MD.pulsar_period # ms
+            bins_per_pulse = self.MD.nBins_per_period
+            dm_timebin = pulse_period / bins_per_pulse # ms
+        else:
+            dm_timebin = self.TimeBinSize
+        # now we want to shift all the frequencies
+        shift_start = time.time()
+        
+        for ii, freq in enumerate(self.freq_Array):
+            if self.to_DM_Broaden and self.MD.mode=='explore':
+                    raise ValueError('FD shifting not currently supported in explore mode.')
+            # BRENT HACK: changed the dt to be the dm_timebin variable defined above
+            self.signal[ii,:] = utils.shift_t(np.double(self.signal[ii,:]), \
+                       np.double(self.FD_delay[ii]), \
+                       use_pyfftw=use_pyfftw, dt=np.double(dm_timebin))
+            
+            if (ii+1) % int(self.Nf//20) ==0:
+                    shift_check = time.time()
+                    try: #Python 2 workaround. Python 2 __future__ does not have 'flush' kwarg.
+                        print('\r{0:2.0f}% dispersed in {1:4.3f} seconds.'.format(round((ii + 1)*100/self.Nf) , shift_check-shift_start), end='', flush=True)
+                    except: #This is the Python 2 version.
+                        print('\r{0:2.0f}% dispersed in {1:4.3f} seconds.'.format(round((ii + 1)*100/self.Nf) , shift_check-shift_start), end='')
+                    sys.stdout.flush()
+        
+        self.ISM_Dict['FD_shifted'] = True
         self.Signal_in.MetaData.AddInfo(self.ISM_Dict)
 
 
