@@ -31,7 +31,7 @@ class ISM(object):
         self.first_freq = self.Signal_in.first_freq
         self.last_freq = self.Signal_in.last_freq
         self.freq_Array = self.Signal_in.freq_Array
-        self.DM = DM
+        self.DM = np.double(DM)
         # Added FD parameters
         self.FDs = FDs
         self.tau_scatter = None
@@ -71,10 +71,11 @@ class ISM(object):
             raise ValueError('Signal has already been dispersed!')
         if self.Signal_in.SignalType=='intensity':
             #For intensity signal calculate dispersion for all sub-bands.
-            self.K = 1.0/2.41e-4 #constant used to be more consistent with PSRCHIVE
-            #self.time_delays = -1e-3*self.K*self.DM*(np.power((self.freq_Array/1e3),-2)) #freq in MHz, delays in milliseconds
-            self.time_delays = np.double(-1e-3)*np.double(self.K)*np.double(self.DM)\
-                *(np.power((np.double(self.freq_Array)/np.double(1e3)),np.double(-2))) #freq in MHz, delays in milliseconds
+            self.K = np.double(1.0/2.41e-4) #constant used to be more consistent with PSRCHIVE
+            self.time_delays = np.double(-1e-3*self.K*self.DM*\
+                                         (np.power((self.freq_Array/1e3),-2))) #freq in MHz, delays in milliseconds
+            #self.time_delays = np.double(-1e-3)*np.double(self.K)*np.double(self.DM)\
+            #    *(np.power((np.double(self.freq_Array)/np.double(1e3)),np.double(-2))) #freq in MHz, delays in milliseconds
             # BRENT HACK:
             # Testing out changing the DM delay to be refrenced from min freq
             #self.time_delays = -1e-3*self.K*self.DM*((np.power(np.min((self.freq_Array)/1e3),-2))-\

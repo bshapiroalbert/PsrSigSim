@@ -266,7 +266,7 @@ class Simulation(object):
             pass
         
         # BRENT HACK: We have added this function to shift the profiles given some FD parameters
-        if "FD" not in self.sim_dict.keys():
+        if len(self.sim_dict['FD']) == 1 and self.sim_dict['FD'][0] == 0.0:
             pass
         else:
             try:
