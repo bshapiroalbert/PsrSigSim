@@ -615,13 +615,23 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         #psrfits1.HDU_drafts['SUBINT'][ii]['OFFS_SUB'] = offs_sub[ii]
         
         psrfits1.HDU_drafts['SUBINT'][ii]['DATA'] = Out[ii,0,:,:]
-        psrfits1.HDU_drafts['SUBINT'][ii]['DAT_SCL'] = templ_subint[ii]['DAT_SCL'][:,:nf*npols]
-        psrfits1.HDU_drafts['SUBINT'][ii]['DAT_OFFS'] = templ_subint[ii]['DAT_OFFS'][:,:nf*npols]
         #if freqbins == None:
         #    psrfits1.HDU_drafts['SUBINT'][ii]['DAT_FREQ'] = templ_subint[ii]['DAT_FREQ']
         #else:   
         psrfits1.HDU_drafts['SUBINT'][ii]['DAT_FREQ'] = freqbins
-        psrfits1.HDU_drafts['SUBINT'][ii]['DAT_WTS'] = templ_subint[ii]['DAT_WTS']
+        # We want to set all DAT_SCL and DAT_WTS values to 1, and DAT_OFFS values to 0
+        #psrfits1.HDU_drafts['SUBINT'][ii]['DAT_SCL'] = templ_subint[ii]['DAT_SCL'][:,:nf*npols]
+        #psrfits1.HDU_drafts['SUBINT'][ii]['DAT_OFFS'] = templ_subint[ii]['DAT_OFFS'][:,:nf*npols]
+        #psrfits1.HDU_drafts['SUBINT'][ii]['DAT_WTS'] = templ_subint[ii]['DAT_WTS']
+        
+        # Get the shapes of the wieghts, scales, and offs arrays
+        weight_shape = np.shape(templ_subint[ii]['DAT_SCL'])
+        scale_shape = np.shape(templ_subint[ii]['DAT_OFFS'])
+        offs_shape = np.shape(templ_subint[ii]['DAT_WTS'])
+        # Now assign the values
+        psrfits1.HDU_drafts['SUBINT'][ii]['DAT_SCL'] = np.ones(scale_shape)
+        psrfits1.HDU_drafts['SUBINT'][ii]['DAT_OFFS'] = np.zeros(offs_shape)
+        psrfits1.HDU_drafts['SUBINT'][ii]['DAT_WTS'] = np.ones(weight_shape)
     # Check dtype
     #print(psrfits1.HDU_drafts['SUBINT'][0]['DAT_OFFS'].dtype)
     """
