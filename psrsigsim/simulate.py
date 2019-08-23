@@ -266,11 +266,14 @@ class Simulation(object):
             pass
         
         # BRENT HACK: We have added this function to shift the profiles given some FD parameters
-        try:
-            self.ISM.FD_Shift()
-            
-        except AttributeError:
+        if "FD" not in self.sim_dict.keys():
             pass
+        else:
+            try:
+                self.ISM.FD_Shift()
+                
+            except AttributeError:
+                pass
         
 #         try:
 #             self.Scintillate = self.Scint.() # Add command once it exists

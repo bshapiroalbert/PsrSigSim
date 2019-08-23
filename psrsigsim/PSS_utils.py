@@ -625,8 +625,8 @@ def save_psrfits(signal, template=None, nbin = 2048, nsubint = 64, npols = 1, \
         #psrfits1.HDU_drafts['SUBINT'][ii]['DAT_WTS'] = templ_subint[ii]['DAT_WTS']
         
         # Get the shapes of the wieghts, scales, and offs arrays
-        weight_shape = np.shape(templ_subint[ii]['DAT_SCL'])
-        scale_shape = np.shape(templ_subint[ii]['DAT_OFFS'])
+        weight_shape = np.shape(templ_subint[ii]['DAT_SCL'][:,:nf*npols])
+        scale_shape = np.shape(templ_subint[ii]['DAT_OFFS'][:,:nf*npols])
         offs_shape = np.shape(templ_subint[ii]['DAT_WTS'])
         # Now assign the values
         psrfits1.HDU_drafts['SUBINT'][ii]['DAT_SCL'] = np.ones(scale_shape)
