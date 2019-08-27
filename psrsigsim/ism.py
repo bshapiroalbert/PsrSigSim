@@ -138,7 +138,7 @@ class ISM(object):
         k = 0
         for FD in self.FDs:
             self.FD_delay += np.double(FD * \
-                    np.power(np.log10(self.freq_Array)/1000.0),k+1) # will be in seconds
+                    np.power(np.log10(self.freq_Array/1000.0),k+1)) # will be in seconds
             #self.FD_delay += np.double(FD) * \
             #        np.power(np.double(np.log10(np.double(self.freq_Array)/np.double(1000.0))),np.double(k+1)) # will be in seconds
             k += 1
