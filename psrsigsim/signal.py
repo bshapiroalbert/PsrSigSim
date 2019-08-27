@@ -76,7 +76,7 @@ class Signal(object):
             # Edit sampling rate if subints, assume 2048 bins per subint for now
             self.f_samp = 2048.0/self.subintlen
             # Basically samples per subint now?
-            Nt = int((self.ObsTime*1e-3/self.subintlen)*2048.0)+1
+            Nt = int((self.ObsTime*1e-3/self.subintlen)*2048.0)
         else:
             Nt = int(self.ObsTime*1e-3 * self.f_samp*1e6)+1
 
