@@ -131,13 +131,16 @@ class ISM(object):
         This is caluclate the delay that will be added due to an arbitrary number 
         of input FD parameters following the NANOGrav standard as defined in 
         Arzoumanian et al. 2016. It will then shift the pulse profiles by the 
-        appropriate amount based on these parameters
+        appropriate amount based on these parameters.
+        
+        We need a negative sign for these shifts. This has been added but not
+        sure why...
         """
         # calculate the delay added in for the parameters
         self.FD_delay = np.zeros(len(self.freq_Array)) # will be in seconds
         k = 0
         for FD in self.FDs:
-            self.FD_delay += np.double(FD * \
+            self.FD_delay += np.double(-1.0*FD * \
                     np.power(np.log10(self.freq_Array/1000.0),k+1)) # will be in seconds
             #self.FD_delay += np.double(FD) * \
             #        np.power(np.double(np.log10(np.double(self.freq_Array)/np.double(1000.0))),np.double(k+1)) # will be in seconds
