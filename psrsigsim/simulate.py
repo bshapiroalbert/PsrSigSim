@@ -2,7 +2,6 @@
 simulation wrapper
 """
 import psrsigsim as PSS
-import psrsigsim as PSS
 from psrsigsim import Telescope
 import sys 
 import pint 
@@ -13,6 +12,8 @@ import h5py
 from psrsigsim import PSS_utils
 import numpy as np
 import pdat
+import scipy.signal as spsig
+
 
 d_path = os.path.dirname(__file__)
 
@@ -20,7 +21,7 @@ default_path = os.path.join(d_path, './data/')
 class Simulation(object):
     
     def __init__(self, psr = None, sim_telescope = None, sim_ism = False, sim_scint = False, \
-                 sim_dict = None, sim_file_path = default_path ): 
+                 sim_broadening = False, sim_dict = None, sim_file_path = default_path ): 
         """ This class simulates an observing run given a pulsar name or a dictionary of paramters. Once the simulation is called,
     the different classes (signal, pulsar,ism,scint,telescope) can be initialized with the initiatlization functions. init_signal and init_pulsar are the 
     only required functions to run the simulation. If a pulsar name is input, then these function are ran automatically. The required paramaters needed
@@ -82,6 +83,7 @@ class Simulation(object):
         self.sim_telescope = sim_telescope
         self.sim_ism = sim_ism
         self.sim_scint = sim_scint
+        self.sim_broaden = sim_broaden
         self.sim_dict = sim_dict
         self.sim_file_path = sim_file_path
         
@@ -101,6 +103,9 @@ class Simulation(object):
             
             self.init_signal()
             self.init_pulsar()
+            if sim_broadening:
+                self.init_broaden()
+            
             if sim_ism:
                 self.init_ism()
                 
@@ -155,6 +160,85 @@ class Simulation(object):
         self.pulsar = PSS.Pulsar(self.signal, period = 1000/float(d['F0']) , flux = d['flux']) # in units of milliseconds
         
         
+    def init_broaden(self, scat_dict = None, ref = None):
+        """
+        BRENT ADDED FUCNTION!
+        This is a function that will, after a pulsar is initialized with some 
+        template (user added or otherwise), it will broaden the profiles as a function
+        of frequency given some scatter broadening timescale and uncertainty. 
+        These values will need to be given in the initial simulation dictionary.
+        The functions used to do this broadening are already implimented in the 
+        simulator.
+        
+        @param tau_d_ref -- scatter broadening timescale (ms)
+        @param tau_d_err -- 1 sigma uncertainty on tau_d (ms)
+        @param ref_freq -- the frequency tau_d_ref is referenced to. If ref == None
+                    this is the default value of the simulation dictionary, 
+                    otherwise it is the reference frequency in MHz.
+        """
+        # We first take the tau_d values from the dictionary
+        d = self._check_simul_dict(scat_dict)
+        if 'tau_d' in d.keys():
+            if len(d['tau_d']) >= 2:
+                tau_d_ref = d['tau_d'][0]
+                tau_d_err = d['tau_d'][1]
+            else:
+                tau_d_ref = d['tau_d'][0]
+                tau_d_err = 0.1*tau_d_ref #arbitrary error assigned
+        else:
+            tau_d_ref = 100.0*10**-6 # default to 100 ns scatter broadening
+            tau_d_err = 0.1*tau_d_ref #arbitrary error assigned
+        # now we assign some other useful values
+        if ref == None:
+            ref_freq = self.signal.f0
+        else:
+            ref_freq = np.float(ref) # frequency in MHz
+        # Now we want to randomly sample the scattering time as the process has no
+        # general trend with time as in Turner et al. in prep
+        tau_d_sampled = tau_d_err * np.random.randn(1) + tau_d_ref
+        # Cannot be negative
+        if tau_d_sampled < 0.0:
+            tau_d_sampled = np.abs(tau_d_sampled)
+        # Now we get the scaling for tau_d
+        tau_d_scaled = PSS.scintillation.scale_tau_d(tau_d_sampled, \
+                        nu_f=self.signal.freq_Array, nu_i=ref_freq, beta=11.0/3.0)
+        # Now we get the array of exponentials based on this scaling
+        # this is based on the make_scatter_broaden_exp function in ism.py
+        width = self.pulsar.nBinsPeriod
+        t = np.linspace(0, self.pulsar.T, width)
+        EXP_array = np.zeros((self.pulsar.Nf, width))
+        #Iterating over the tau arrays where each profile
+        #corresponds to the respective tau index
+        for ii, tau_scatter in enumerate(tau_d_scaled):
+            EXP = (np.exp(-t/tau_scatter))
+            EXP_array[ii,:] = EXP
+        # Now we want to convolve these profiles. This is based on the convolve 
+        # with profiles function in ism.py
+        for ii, freq in enumerate(self.signal.freq_Array):
+            #Normalizing the pulse profile
+            pulsar_prof_sum = np.sum(self.pulsar.profile[ii,:])
+            pulsar_prof_norm = self.pulsar.profile[ii,:] / pulsar_prof_sum
+    
+            #Normalizing the input array
+            EXP_array_sum = np.sum(EXP_array[ii,:])
+            EXP_array_norm = EXP_array[ii,:] / EXP_array_sum
+    
+            #Convolving the input array with the pulse profile
+            convolved_prof = spsig.convolve(pulsar_prof_norm, EXP_array_norm, \
+                                            mode='full',method='fft')
+    
+            #Renormalizing the convolved pulse profile
+            self.pulsar.profile[ii,:] = (pulsar_prof_sum)*(convolved_prof[:width])
+           
+        """
+        To Do:
+        DONE 1. Use the scaling function and relation (assuming kolomogorov medium)
+            to get the exponential array to convolve the profiles with. 
+        DONE 2. Actually convolve the profiles.
+        3. Test that this works.
+        """
+        
+    
     def init_ism(self,ism_dict = None):
         """This is a function that initializes the pulsar class using a dictionary of paramaters.It either uses the dictionary
         set when Simulation() is called, when ism_dict is left as None, or a dictianary that is input directly
@@ -243,8 +327,6 @@ class Simulation(object):
                 self.ISM.to_DM_Broaden = self.sim_dict['to_DM_Broaden']
                 
 
-                
-            
             self.ISM.finalize_ism()
            
             if self.signal.MetaData.to_DM_Broaden:
@@ -349,7 +431,7 @@ class Simulation(object):
                             print("getting initialized offsub value (GOOD)", self.sim_dict['Start_MJD'][3])
                             OFFS_SUB = self.sim_dict['Start_MJD'][3]
                         else:
-                            print("gonna fuck up your phase connection probaby")
+                            print("ERROR: Phase connection will likely be wrong")
                             OFFS_SUB = 0.5
                     # Otherwise use predetermined values
                     else:

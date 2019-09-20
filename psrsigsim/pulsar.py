@@ -360,7 +360,7 @@ class Pulsar(object):
                 self.signal[:,start_bin:N_periods_to_make * self.nBinsPeriod] = pulseTypeMethod(N_periods_to_make, pulses_per_subint = pulses_per_subint) #Can be put into main flow for large RAM computers.
         else:
             print(self.SignalType)
-            print("Dammit I fucked up somewhere in the make_pulses function...")
+            print("ERROR: Signal type is correct, could not make pulses")
         self.LastPeriod = pulseTypeMethod(1)[:,0:self.NLastPeriodBins]
         self.signal[:,start_bin + N_periods_to_make * self.nBinsPeriod:start_bin + N_periods_to_make * self.nBinsPeriod + self.NLastPeriodBins] = self.LastPeriod
 
