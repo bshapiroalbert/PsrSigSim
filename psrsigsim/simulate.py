@@ -21,7 +21,7 @@ default_path = os.path.join(d_path, './data/')
 class Simulation(object):
     
     def __init__(self, psr = None, sim_telescope = None, sim_ism = False, sim_scint = False, \
-                 sim_broadening = False, sim_dict = None, sim_file_path = default_path ): 
+                 sim_broaden = False, sim_dict = None, sim_file_path = default_path ): 
         """ This class simulates an observing run given a pulsar name or a dictionary of paramters. Once the simulation is called,
     the different classes (signal, pulsar,ism,scint,telescope) can be initialized with the initiatlization functions. init_signal and init_pulsar are the 
     only required functions to run the simulation. If a pulsar name is input, then these function are ran automatically. The required paramaters needed
@@ -103,7 +103,7 @@ class Simulation(object):
             
             self.init_signal()
             self.init_pulsar()
-            if sim_broadening:
+            if sim_broaden:
                 self.init_broaden()
             
             if sim_ism:
