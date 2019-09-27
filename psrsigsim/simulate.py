@@ -199,6 +199,8 @@ class Simulation(object):
         # Cannot be negative
         if tau_d_sampled < 0.0:
             tau_d_sampled = np.abs(tau_d_sampled)
+        # Now we print the tau value that was used
+        print("tau_d sampled value is %.5e ms" % (tau_d_sampled))
         # Now we get the scaling for tau_d
         tau_d_scaled = PSS.scintillation.scale_tau_d(tau_d_sampled, \
                         nu_f=self.signal.freq_Array, nu_i=ref_freq, beta=11.0/3.0)
@@ -229,14 +231,6 @@ class Simulation(object):
     
             #Renormalizing the convolved pulse profile
             self.pulsar.profile[ii,:] = (pulsar_prof_sum)*(convolved_prof[:width])
-           
-        """
-        To Do:
-        DONE 1. Use the scaling function and relation (assuming kolomogorov medium)
-            to get the exponential array to convolve the profiles with. 
-        DONE 2. Actually convolve the profiles.
-        3. Test that this works.
-        """
         
     
     def init_ism(self,ism_dict = None):
