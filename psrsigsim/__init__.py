@@ -13,7 +13,10 @@ from . import telescope
 from . import ism
 from . import io
 from . import utils
-from . import simulate
+try:
+    from . import simulate
+except ImportError:
+    print("Can't import simulate class for some reason.")
 
 __all__ = ["signal",
            "pulsar",
