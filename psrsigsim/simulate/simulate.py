@@ -18,6 +18,8 @@ except ImportError:
     print("Won't be able to instantiate from psrfits or save psrfits")
 from ..utils.utils import make_par
 
+__all__ = ["Simulation"]
+
 class Simulation(object):
     """convenience class for full simulations.
 
