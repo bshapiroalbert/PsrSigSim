@@ -12,7 +12,10 @@ from ..pulsar import UserPortrait
 from ..pulsar import DataPortrait
 from ..pulsar import DataProfile
 from ..ism import ISM
-from ..io import PSRFITS, TxtFile
+try:
+    from ..io import PSRFITS, TxtFile
+except ImportError:
+    print("Won't be able to instantiate from psrfits or save psrfits")
 from ..utils.utils import make_par
 
 class Simulation(object):
