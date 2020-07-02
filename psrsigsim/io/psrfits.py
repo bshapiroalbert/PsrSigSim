@@ -5,8 +5,14 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 import numpy as np
 from packaging import version
-import fitsio
-import pdat
+try:
+    import fitsio
+except ImportError:
+    print("No fitsio, won't be able to use PSRFITS class")
+try:
+    import pdat
+except ImportError:
+    print("No pdat, won't be able to use PSRFITS class")
 from .file import BaseFile
 from ..utils import make_quant
 from ..signal import Signal

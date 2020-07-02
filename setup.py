@@ -16,7 +16,7 @@ requirements = [
     'scipy',
     'matplotlib>=2.0.0',
     'h5py',
-    'pdat'
+    #'pdat'
     # TODO: put package requirements here
 ]
 
